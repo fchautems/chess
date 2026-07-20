@@ -24,7 +24,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cat .payload/part-*.txt | base64 --decode > /tmp/v71-source-and-splitter.tar.gz
+          { cat .payload/test-10k.txt; cat .payload/part-*.txt; } | base64 --decode > /tmp/v71-source-and-splitter.tar.gz
           echo "0b258abead12302bd5a33680c291b80caaca63038a637dd0a042f1040f2bcd4e  /tmp/v71-source-and-splitter.tar.gz" | sha256sum --check
 
       - name: Restore exact source and split mechanically
