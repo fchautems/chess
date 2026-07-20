@@ -1,0 +1,215 @@
+name: Construire et valider la V7.1 séparée
+
+on:
+  push:
+    branches:
+      - refactor/v7.1-split-clean
+    paths:
+      - .v71-build-trigger
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: v71-split-clean
+  cancel-in-progress: false
+
+jobs:
+  build-and-validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer tout l’historique
+        uses: actions/checkout@v4
+        with:
+          ref: refactor/v7.1-split-clean
+          fetch-depth: 0
+
+      - name: Restaurer la source V7.1 exacte
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE_BLOB="4a00914d628f2e6348d930a063e3fb4861d56142"
+          SOURCE_SHA256="10e266aacf6c75bc9bd91cbad800363754c1ee912abe8329b8ff32ceca570c2f"
+
+          git cat-file -e "${SOURCE_BLOB}^{blob}"
+          rm -rf baseline/source v71-preview validation-report.json VALIDATION.md
+          mkdir -p baseline v71-preview/vendor
+          git cat-file blob "$SOURCE_BLOB" > baseline/entraineur_ouvertures_echecs_v7_1.html
+          printf '%s  %s\n' "$SOURCE_SHA256" "entraineur_ouvertures_echecs_v7_1.html" > baseline/SHA256.txt
+          (cd baseline && sha256sum --check SHA256.txt)
+
+      - name: Séparer mécaniquement HTML, CSS et JavaScript
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib
+          import json
+          import re
+
+          source_path = Path('baseline/entraineur_ouvertures_echecs_v7_1.html')
+          source = source_path.read_text(encoding='utf-8')
+
+          style_open = source.index('<style>')
+          style_start = style_open + len('<style>')
+          style_close = source.index('</style>', style_start)
+          css = source[style_start:style_close]
+
+          script_open = source.rfind('<script>')
+          if script_open < 0:
+              raise RuntimeError('Script applicatif intégré introuvable')
+          script_start = script_open + len('<script>')
+          script_close = source.index('</script>', script_start)
+          app_js = source[script_start:script_close]
+
+          external_script = '<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>'
+          if external_script not in source:
+              raise RuntimeError('Référence chess.js attendue introuvable')
+
+          index = source[:style_open]
+          index += '<link rel="stylesheet" href="styles.css?v=7.1-split">'
+          index += source[style_close + len('</style>'):script_open]
+          index = index.replace(
+              external_script,
+              '<script src="vendor/chess.min.js?v=0.10.3"></script>',
+              1,
+          )
+          index += '<script src="app.js?v=7.1-split"></script>'
+          index += source[script_close + len('</script>'):]
+
+          out = Path('v71-preview')
+          (out / 'index.html').write_text(index, encoding='utf-8')
+          (out / 'styles.css').write_text(css, encoding='utf-8')
+          (out / 'app.js').write_text(app_js, encoding='utf-8')
+
+          # Reconstitution exacte : seules les deux balises externes changent.
+          reconstructed = index
+          reconstructed = reconstructed.replace(
+              '<link rel="stylesheet" href="styles.css?v=7.1-split">',
+              '<style>' + css + '</style>',
+              1,
+          )
+          reconstructed = reconstructed.replace(
+              '<script src="vendor/chess.min.js?v=0.10.3"></script>',
+              external_script,
+              1,
+          )
+          reconstructed = reconstructed.replace(
+              '<script src="app.js?v=7.1-split"></script>',
+              '<script>' + app_js + '</script>',
+              1,
+          )
+
+          html_ids = re.findall(r'\bid=["\']([^"\']+)["\']', index)
+          js_ids = re.findall(r'getElementById\(["\']([^"\']+)["\']\)', app_js)
+          duplicate_html_ids = sorted({item for item in html_ids if html_ids.count(item) > 1})
+          missing_html_ids = sorted(set(js_ids) - set(html_ids))
+
+          function_expectations = {
+              'startTraining': 3,
+              'updatePreview': 4,
+              'bindEvents': 2,
+              'init': 2,
+          }
+          function_counts = {
+              name: len(re.findall(rf'\bfunction\s+{re.escape(name)}\s*\(', app_js))
+              for name in function_expectations
+          }
+
+          report = {
+              'source_sha256': hashlib.sha256(source.encode('utf-8')).hexdigest(),
+              'baseline_restores_exactly': reconstructed == source,
+              'css_exact_extraction': css == source[style_start:style_close],
+              'javascript_exact_extraction': app_js == source[script_start:script_close],
+              'html_id_count': len(html_ids),
+              'javascript_id_count': len(set(js_ids)),
+              'missing_html_ids': missing_html_ids,
+              'duplicate_html_ids': duplicate_html_ids,
+              'duplicate_function_counts': function_counts,
+              'duplicate_function_order_preserved': function_counts == function_expectations,
+              'generated_files': {
+                  'index.html': len(index.encode('utf-8')),
+                  'styles.css': len(css.encode('utf-8')),
+                  'app.js': len(app_js.encode('utf-8')),
+              },
+              'main_branch_modified': False,
+          }
+
+          required = [
+              report['baseline_restores_exactly'],
+              report['css_exact_extraction'],
+              report['javascript_exact_extraction'],
+              not report['missing_html_ids'],
+              not report['duplicate_html_ids'],
+              report['duplicate_function_order_preserved'],
+          ]
+          if not all(required):
+              raise RuntimeError(json.dumps(report, ensure_ascii=False, indent=2))
+
+          Path('validation-report.json').write_text(
+              json.dumps(report, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          Path('VALIDATION.md').write_text(
+              '# Validation V7.1 séparée\n\n'
+              '- Source restaurée bit pour bit depuis le blob Git historique.\n'
+              '- SHA-256 vérifié : `10e266aacf6c75bc9bd91cbad800363754c1ee912abe8329b8ff32ceca570c2f`.\n'
+              '- CSS extrait sans modification vers `v71-preview/styles.css`.\n'
+              '- JavaScript extrait sans modification vers `v71-preview/app.js`.\n'
+              '- Ordre et nombre des déclarations dupliquées conservés.\n'
+              '- Tous les identifiants DOM utilisés par JavaScript existent dans le HTML.\n'
+              '- Aucun identifiant HTML dupliqué.\n'
+              '- La branche `main` n’est pas modifiée.\n\n'
+              'Les validations navigateur et téléphone auront lieu avant toute publication sur `main`.\n',
+              encoding='utf-8',
+          )
+          PY
+
+      - name: Ajouter chess.js localement
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location \
+            https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js \
+            --output v71-preview/vendor/chess.min.js
+          test -s v71-preview/vendor/chess.min.js
+
+      - name: Contrôler la syntaxe et la structure
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check v71-preview/app.js
+          node --check v71-preview/vendor/chess.min.js
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          report = json.loads(Path('validation-report.json').read_text(encoding='utf-8'))
+          assert report['source_sha256'] == '10e266aacf6c75bc9bd91cbad800363754c1ee912abe8329b8ff32ceca570c2f'
+          assert report['baseline_restores_exactly'] is True
+          assert report['css_exact_extraction'] is True
+          assert report['javascript_exact_extraction'] is True
+          assert report['missing_html_ids'] == []
+          assert report['duplicate_html_ids'] == []
+          assert report['duplicate_function_order_preserved'] is True
+          assert report['main_branch_modified'] is False
+          print('Validation structurelle V7.1 : OK')
+          PY
+
+      - name: Enregistrer le résultat sur la branche de travail
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .v71-build-trigger
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'Aucune modification à enregistrer.'
+            exit 0
+          fi
+          git commit -m "Gèle et sépare mécaniquement la V7.1"
+          git push origin HEAD:refactor/v7.1-split-clean
