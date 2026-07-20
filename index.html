@@ -1,55 +1,209 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#262421">
-<title>Ouvertures — Entraîneur</title>
-<style>
-:root{--bg:#262421;--panel:#312e2b;--panel2:#3b3835;--txt:#f4f1ea;--muted:#aaa49b;--green:#81b64c;--blue:#55b1ff;--warn:#e0aa45;--bad:#d96758;--light:#eed6ad;--dark:#b6784f}*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,Segoe UI,sans-serif}button,select{font:inherit}.app{width:min(100%,760px);min-height:100dvh;margin:auto;padding:14px}.screen{display:none}.screen.active{display:block}.top,.train-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.top{margin-bottom:12px}.brand{display:flex;align-items:center;gap:10px}.brand b{font-size:28px}.small{font-size:12px;color:var(--muted)}.xp{text-align:right}.bar,.progress{height:7px;border-radius:99px;background:#171614;overflow:hidden}.bar{width:140px;margin-top:5px}.fill,.progress>div{height:100%;width:0;background:var(--green);transition:width .25s}.card,.status{background:var(--panel);border:1px solid #ffffff0d;border-radius:16px}.card{padding:16px;box-shadow:0 12px 30px #0005}.grid{display:grid;gap:12px}.two{grid-template-columns:1fr 1fr}label{display:block;font-size:13px;font-weight:800;margin-bottom:6px}select{width:100%;min-height:46px;background:#22201e;color:var(--txt);border:1px solid #ffffff14;border-radius:10px;padding:0 12px}.actions,.toolbar{display:grid;gap:9px}.actions{margin-top:12px}.toolbar{grid-template-columns:repeat(3,1fr)}button{border:0;border-radius:11px;font-weight:850;cursor:pointer}.primary,.secondary,.boss{min-height:50px}.primary{background:var(--green);color:#17210f}.secondary{background:var(--panel2);color:var(--txt)}.boss{background:linear-gradient(135deg,#76571c,#c69437);color:#fff5d5}.preview{margin-top:12px;padding:13px;border-left:3px solid var(--blue);background:#272522;border-radius:10px;color:#d4cec5;font-size:13px;line-height:1.45}.preview strong{display:block;color:#fff;font-size:15px;margin-bottom:5px}.home-tip{text-align:center;margin-top:12px}.train-head{margin-bottom:8px}.train-head h2{font-size:18px;margin:0}.chips{display:flex;gap:6px}.chip{background:var(--panel2);padding:6px 9px;border-radius:99px;font-size:12px;font-weight:800}.board{display:grid;grid-template-columns:repeat(8,1fr);width:100%;aspect-ratio:1;margin:auto;box-shadow:0 10px 28px #0006;background:#1f1e1b}.sq{position:relative;display:grid;place-items:center;font-size:clamp(30px,10vw,67px);line-height:1;user-select:none;cursor:pointer}.light{background:var(--light)}.dark{background:var(--dark)}.sq.sel:after,.sq.last:after,.sq.hint:after{content:"";position:absolute;inset:0;pointer-events:none}.sq.sel:after{background:#ffe36e80}.sq.last:after{background:#c9c04055}.sq.hint:after{background:#55b1ff70}.piece{position:relative;z-index:2;filter:drop-shadow(0 1px 1px #0005)}.progress{margin:10px 0}.status{margin:10px 0;padding:12px;border-left:4px solid #777;min-height:66px}.status.good{border-left-color:var(--green)}.status.alt{border-left-color:var(--blue)}.status.bad{border-left-color:var(--bad)}.status.warn{border-left-color:var(--warn)}.status strong{display:block;margin-bottom:3px}.status span{color:var(--muted);font-size:13px;line-height:1.4}.modal{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;padding:20px;z-index:30}.modal.open{display:flex}.modal-box{width:min(100%,520px);max-height:88dvh;overflow:auto;background:var(--panel);border-radius:18px;padding:20px}.modal-box h3{margin-top:0}.concept h4{margin:14px 0 6px}.concept p,.concept li{color:#cbc5bc;font-size:13px;line-height:1.5}.legend{display:grid;gap:7px;margin:12px 0}.legend div{padding:9px 10px;border-radius:9px;background:#252320;font-size:12px}.result{text-align:center}.result .big{font-size:42px}.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.stat{background:#252320;border-radius:10px;padding:11px}.stat b{display:block;font-size:20px}.error-banner{display:none;padding:12px;margin-bottom:10px;border-radius:10px;background:#512c27;color:#ffe4de;font-size:13px}.error-banner.show{display:block}@media(max-width:520px){.two{grid-template-columns:1fr}.app{padding:10px}.bar{width:100px}}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#262421">
+  <meta name="description" content="Entraîneur ludique pour apprendre les ouvertures d’échecs, leurs variantes et leurs concepts.">
+  <title>Ouvertures — Campagne V7.1</title>
+  <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-<div class="app">
-<div id="errorBanner" class="error-banner"></div>
-<section id="home" class="screen active">
-<div class="top"><div class="brand"><span style="font-size:42px;color:var(--green)">♞</span><div><b>Ouvertures</b><div class="small">Comprendre, reconnaître, maîtriser.</div></div></div><div class="xp"><div><span id="lvl">Niv. 1</span> · <span id="xpTxt">0 XP</span></div><div class="bar"><div id="xpFill" class="fill"></div></div></div></div>
-<div class="card grid">
-<div class="two grid"><div><label for="color">Couleur</label><select id="color"><option value="white">Les Blancs</option><option value="black">Les Noirs</option></select></div><div><label for="opening">Ouverture</label><select id="opening"></select></div></div>
-<div><label for="level">Niveau</label><select id="level"></select></div>
-<div id="preview" class="preview"></div>
-<div class="actions"><button id="conceptBtn" class="secondary">📘 Comprendre l’ouverture</button><button id="startBtn" class="primary">Commencer</button><button id="bossBtn" class="boss" hidden>👑 Boss final</button></div>
-</div><div class="home-tip small">La progression est enregistrée dans ce navigateur.</div>
-</section>
-<section id="train" class="screen">
-<div class="train-head"><button id="back" class="secondary" style="min-height:40px;padding:0 12px">←</button><div style="text-align:center"><h2 id="title">Ouverture</h2><div id="variant" class="small"></div></div><div class="chips"><span id="combo" class="chip">🔥 0</span><span id="lives" class="chip" hidden>❤️ 3</span></div></div>
-<div id="board" class="board" aria-label="Échiquier"></div><div class="progress"><div id="prog"></div></div>
-<div id="status" class="status"><strong>À toi de jouer</strong><span>Trouve le prochain coup.</span></div>
-<div class="toolbar"><button id="restart" class="secondary">Recommencer</button><button id="hint" class="secondary">Indice</button><button id="conceptTrain" class="secondary">Concept</button></div>
-</section>
-</div>
-<div id="conceptModal" class="modal"><div class="modal-box concept"><h3 id="conceptTitle"></h3><div id="conceptBody"></div><div class="actions"><button id="conceptClose" class="primary">Fermer</button></div></div></div>
-<div id="resultModal" class="modal"><div class="modal-box result"><div id="emoji" class="big">🎉</div><h3 id="resTitle">Session terminée</h3><p id="resSub" class="small"></p><div class="stats"><div class="stat"><b id="acc">0%</b><span class="small">précision</span></div><div class="stat"><b id="err">0</b><span class="small">erreurs</span></div><div class="stat"><b id="hints">0</b><span class="small">indices</span></div><div class="stat"><b id="gain">+0 XP</b><span class="small">récompense</span></div></div><div class="actions"><button id="again" class="primary">Rejouer</button><button id="homeBtn" class="secondary">Retour</button></div></div></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-<script>
-'use strict';
-const U={w:{k:'♔',q:'♕',r:'♖',b:'♗',n:'♘',p:'♙'},b:{k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟'}};
-const DATA={white:[{id:'italian',name:'Partie italienne',desc:'Développement rapide, pression sur f7 et préparation de d4.',principles:['Développer vite les pièces légères','Roquer avant d’ouvrir complètement le centre','Préparer d4 avec c3 quand la position le permet','Utiliser la pression sur f7 comme contrainte, pas comme attaque forcée'],signals:[['...Fc5','Jeu symétrique : prépare c3 puis d4.'],['...Cf6','Les Noirs attaquent e4 : protège le centre et surveille les tactiques.'],['...Fe7','Développement solide : profite de ton avance d’espace.'],['...d6','Centre fermé : construis calmement avant la rupture d4.']],branches:[{name:'Giuoco Piano',moves:['e4','e5','Nf3','Nc6','Bc4','Bc5','c3','Nf6','d4','exd4','cxd4','Bb4+','Bd2','Bxd2+','Nbxd2','d5','exd5','Nxd5','O-O','O-O']},{name:'Deux Cavaliers',moves:['e4','e5','Nf3','Nc6','Bc4','Nf6','d3','Bc5','O-O','d6','c3','O-O','Re1','a6']},{name:'Défense hongroise',moves:['e4','e5','Nf3','Nc6','Bc4','Be7','d4','d6','O-O','Nf6','Re1','O-O']},{name:'Structure ...d6',moves:['e4','e5','Nf3','Nc6','Bc4','d6','d4','exd4','Nxd4','Nf6','Nc3','Be7','O-O','O-O']}],alts:{'e4 e5 Nf3 Nc6 Bc4 Bc5':'O-O|d3','e4 e5 Nf3 Nc6 Bc4 Nf6':'Ng5','e4 e5 Nf3 Nc6':'Bb5'}},{id:'london',name:'Système de Londres',desc:'Structure robuste avec Ff4, e3, Cf3 et c3.',principles:['Construire une structure stable','Développer le fou avant e3','Choisir le bon moment pour c4 ou e4'],signals:[['...d5','Structure classique : Ff4 puis e3.']],branches:[{name:'Londres classique',moves:['d4','d5','Nf3','Nf6','Bf4','e6','e3','Bd6','Bg3','O-O','Bd3','c5','c3','Nc6','Nbd2']}],alts:{}}],black:[{id:'caro',name:'Caro-Kann',desc:'Défense solide contre e4 avec ...c6 et ...d5.',principles:['Contester le centre sans bloquer le fou c8','Accepter un léger manque d’espace au début','Viser une structure saine en finale'],signals:[['e4','Prépare ...c6 puis ...d5.'],['e5','Développe le fou avant ...e6.']],branches:[{name:'Variante d’avance',moves:['e4','c6','d4','d5','e5','Bf5','Nf3','e6','Be2','c5','O-O','Nc6']}],alts:{}},{id:'french',name:'Défense française',desc:'Centre solide avec ...e6 et ...d5.',principles:['Attaquer la chaîne de pions par sa base','Accepter un fou c8 parfois passif','Créer du contre-jeu à l’aile dame'],signals:[['e4','Réponds ...e6 pour préparer ...d5.']],branches:[{name:'Classique',moves:['e4','e6','d4','d5','Nc3','Nf6','e5','Nfd7','f4','c5','Nf3','Nc6']}],alts:{}}]};
-const $=id=>document.getElementById(id);let profile;try{profile=JSON.parse(localStorage.getItem('chessProfile')||'{"xp":0,"mastery":{}}')}catch(_){profile={xp:0,mastery:{}}}let color='white',opening=null,level=1,game=null,line=[],idx=0,sel=null,last=null,errors=0,hints=0,first=0,total=0,combo=0,boss=false,lives=3,queue=[],qIndex=0,current=null;
-function reportError(message){const e=$('errorBanner');e.textContent=message;e.classList.add('show')}window.addEventListener('error',event=>reportError('Erreur technique : '+event.message));
-function save(){localStorage.setItem('chessProfile',JSON.stringify(profile));updateXP()}function updateXP(){const lv=Math.floor(profile.xp/500)+1,base=(lv-1)*500;$('lvl').textContent='Niv. '+lv;$('xpTxt').textContent=profile.xp+' XP';$('xpFill').style.width=Math.min(100,(profile.xp-base)/500*100)+'%'}function openings(){return DATA[color]}function mastery(){return profile.mastery[opening.id]||0}
-function populate(){color=$('color').value;$('opening').innerHTML=openings().map(o=>`<option value="${o.id}">${o.name}</option>`).join('');opening=openings()[0];populateLevels();preview()}function populateLevels(){const m=mastery();$('level').innerHTML=[1,2,3].map(n=>`<option value="${n}" ${n>m+1?'disabled':''}>Niveau ${n}${n===1?' — Apprendre':n===2?' — Variantes':' — Positions'}</option>`).join('');level=Math.min(Math.max(1,m+1),3);$('level').value=String(level);$('bossBtn').hidden=m<3||opening.id!=='italian'}function preview(){const m=mastery();$('preview').innerHTML=`<strong>${opening.name}</strong>${opening.desc}<br><br><b>Concept :</b> ${opening.principles[0]}<br><b>Progression :</b> niveau ${m}/3 maîtrisé.`}function show(id){$('home').classList.remove('active');$('train').classList.remove('active');$(id).classList.add('active')}
-function concept(){$('conceptTitle').textContent=opening.name;$('conceptBody').innerHTML=`<h4>Ce que cherche l’ouverture</h4><ul>${opening.principles.map(x=>`<li>${x}</li>`).join('')}</ul><h4>Lire les réponses adverses</h4>${opening.signals.map(([m,t])=>`<div class="legend"><div><b>${m}</b> — ${t}</div></div>`).join('')}<h4>Comment l’application juge tes coups</h4><div class="legend"><div style="border-left:4px solid var(--green)"><b>Coup du répertoire</b> : la réponse précise choisie pour ce répertoire.</div><div style="border-left:4px solid var(--blue)"><b>Bon coup alternatif</b> : valide, mais menant vers un autre plan.</div><div style="border-left:4px solid var(--warn)"><b>Coup non validé</b> : légal, sans être déclaré mauvais faute de moteur.</div></div>`;$('conceptModal').classList.add('open')}
-function userColor(){return color==='white'?'w':'b'}function prep(moves){const g=new Chess();return moves.map((san,i)=>{const m=g.move(san,{sloppy:true});if(!m)throw new Error(`Ligne invalide au coup ${i+1} : ${san}`);return m})}function playPrepared(move){return game.move({from:move.from,to:move.to,promotion:move.promotion||'q'})}
-function start(isBoss=false){if(typeof Chess!=='function'){reportError('Le moteur d’échecs n’a pas pu être chargé. Recharge la page.');return}boss=isBoss;lives=3;errors=hints=first=total=combo=0;sel=null;last=null;$('prog').style.width='0%';if(level===3||boss){queue=[];opening.branches.forEach((branch,b)=>{const p=prep(branch.moves);p.forEach((move,i)=>{if(move.color===userColor()&&i>=4)queue.push({branch:b,ply:i})})});queue.sort(()=>Math.random()-.5);queue=queue.slice(0,boss?12:10);qIndex=0;loadQuiz()}else{const rotation=Number(localStorage.getItem('rot_'+opening.id)||0);const branch=level===1?opening.branches[0]:opening.branches[rotation%opening.branches.length];if(level===2)localStorage.setItem('rot_'+opening.id,String((rotation+1)%opening.branches.length));line=prep(branch.moves);idx=0;game=new Chess();$('variant').textContent=branch.name;show('train');auto();render();status('À toi de jouer','Trouve le prochain coup.','')}$('title').textContent=opening.name;$('lives').hidden=!boss;$('lives').textContent='❤️ '+lives;$('hint').disabled=boss}
-function loadQuiz(){if(qIndex>=queue.length){finish();return}current=queue[qIndex];const branch=opening.branches[current.branch],p=prep(branch.moves);game=new Chess();for(let i=0;i<current.ply;i++)playPrepared(p[i]);line=p;idx=current.ply;last=idx?line[idx-1]:null;show('train');$('title').textContent=opening.name;$('variant').textContent=boss?'Boss — variante cachée':'Position '+(qIndex+1)+' / '+queue.length;render();status('À toi de jouer','Reconnais la position et trouve le coup du répertoire.','')}
-function auto(){while(idx<line.length&&line[idx].color!==userColor()){playPrepared(line[idx]);last=line[idx];idx++}if(idx>=line.length)finish()}
-function squareOrder(){const files='abcdefgh',ranks='87654321';const squares=[...ranks].flatMap(r=>[...files].map(f=>f+r));return color==='black'?squares.reverse():squares}
-function render(){if(!game)return;const order=squareOrder();$('board').innerHTML='';for(const s of order){const f=s.charCodeAt(0)-97,r=8-Number(s[1]),d=document.createElement('div');d.className='sq '+((f+r)%2?'dark':'light')+(sel===s?' sel':'')+((last&&(last.from===s||last.to===s))?' last':'');d.dataset.s=s;const p=game.get(s);if(p)d.innerHTML=`<span class="piece">${U[p.color][p.type]}</span>`;d.onclick=()=>clickSquare(s);$('board').appendChild(d)}const done=(level===3||boss)?qIndex:Math.floor(idx/2);const max=(level===3||boss)?queue.length:Math.ceil(line.length/2);$('prog').style.width=(max?Math.min(100,done/max*100):0)+'%';$('combo').textContent='🔥 '+combo}
-function clickSquare(s){if(!game)return;const p=game.get(s);if(!sel){if(p&&p.color===userColor()&&game.turn()===userColor()){sel=s;render()}return}const before=game.history();const move=game.move({from:sel,to:s,promotion:'q'});if(!move){sel=null;render();return}const expected=line[idx],positionKey=before.join(' '),alts=(opening.alts[positionKey]||'').split('|').filter(Boolean);total++;if(move.from===expected.from&&move.to===expected.to){first++;combo++;last=move;idx++;status('Coup du répertoire',explain(expected.san),'good');sel=null;render();setTimeout(()=>{if(level===3||boss){qIndex++;loadQuiz()}else{auto();render()}},420)}else{game.undo();errors++;combo=0;sel=null;if(alts.includes(move.san)){status('Bon coup alternatif',`${move.san} est jouable, mais mène vers un autre plan. Rejoue le coup du répertoire.`,'alt')}else{if(boss){lives=Math.max(0,lives-1);$('lives').textContent='❤️ '+lives;if(lives===0){render();setTimeout(finish,300);return}}status('Coup légal non validé','Ce coup n’appartient pas au répertoire étudié. Cela ne signifie pas forcément qu’il est mauvais.','warn')}render()}}
-function explain(san){const map={e4:'Occupe le centre et libère le fou et la dame.',Nf3:'Développe une pièce en attaquant le centre.',Bc4:'Développe le fou vers f7, point sensible.',c3:'Prépare la poussée d4.',d4:'Ouvre le centre quand tes pièces sont prêtes.','O-O':'Mets ton roi en sécurité et active la tour.'};return map[san]||'Le coup améliore la coordination des pièces et respecte le plan de l’ouverture.'}function status(t,m,c){$('status').className='status '+c;$('status').innerHTML=`<strong>${t}</strong><span>${m}</span>`}function hint(){hints++;const e=line[idx];if(!e)return;const sq=[...document.querySelectorAll('.sq')].find(x=>x.dataset.s===e.from);if(sq)sq.classList.add('hint');status('Indice',`Cherche un coup depuis ${e.from}. Objectif : ${explain(e.san)}`,'alt')}
-function finish(){const acc=total?Math.round(first/total*100):0,gain=Math.max(20,Math.round(acc/2)-errors*2)+(boss&&lives>0?150:0);profile.xp+=gain;let msg='Progression enregistrée.';if(acc>=85&&hints<=1&&!boss){profile.mastery[opening.id]=Math.max(mastery(),level);msg=`Niveau ${level} validé.`}if(boss&&lives>0){profile.mastery[opening.id]=3;msg='Boss vaincu — ouverture maîtrisée.'}save();$('emoji').textContent=boss?(lives>0?'👑':'💔'):(acc>=85?'🎉':'📚');$('resTitle').textContent=boss?(lives>0?'Boss vaincu':'Boss perdu'):'Session terminée';$('resSub').textContent=msg;$('acc').textContent=acc+'%';$('err').textContent=String(errors);$('hints').textContent=String(hints);$('gain').textContent='+'+gain+' XP';$('resultModal').classList.add('open')}
-$('color').onchange=populate;$('opening').onchange=()=>{opening=openings().find(o=>o.id===$('opening').value);populateLevels();preview()};$('level').onchange=()=>{level=Number($('level').value);preview()};$('startBtn').onclick=()=>start(false);$('bossBtn').onclick=()=>start(true);$('conceptBtn').onclick=concept;$('conceptTrain').onclick=concept;$('conceptClose').onclick=()=>$('conceptModal').classList.remove('open');$('back').onclick=()=>{show('home');populateLevels();preview()};$('restart').onclick=()=>start(boss);$('hint').onclick=hint;$('again').onclick=()=>{$('resultModal').classList.remove('open');start(boss)};$('homeBtn').onclick=()=>{$('resultModal').classList.remove('open');show('home');populateLevels();preview()};updateXP();populate();
-</script>
+<main class="app">
+    <div id="fatalError" class="fatal" role="alert"></div>
+
+    <section id="homeScreen" class="screen active" aria-labelledby="homeTitle">
+      <div class="profile-bar" aria-label="Progression du joueur">
+        <div class="profile-level"><span class="avatar">♞</span><span>Niv. <span id="playerLevel">1</span></span></div>
+        <div class="xp-wrap">
+          <div class="xp-label"><span id="xpLabel">0 XP</span><span id="nextLevelLabel">500 XP</span></div>
+          <div class="xp-track"><div id="xpFill" class="xp-fill"></div></div>
+        </div>
+        <div id="profileStreak" class="profile-streak">🔥 0 jour</div>
+      </div>
+
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">♞</div>
+        <div>
+          <h1 id="homeTitle">Ouvertures</h1>
+          <p>Construis ton répertoire comme une campagne.</p>
+        </div>
+      </div>
+
+      <div class="setup-card">
+        <div class="field">
+          <span class="field-label">Je veux entraîner</span>
+          <div class="segmented" role="group" aria-label="Choix de la couleur">
+            <button id="whiteChoice" class="segment active" type="button" data-color="white">♙ Les Blancs</button>
+            <button id="blackChoice" class="segment" type="button" data-color="black">♟ Les Noirs</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="openingSelect">Ouverture</label>
+          <select id="openingSelect"></select>
+        </div>
+
+        <div class="field level-row">
+          <label class="field-label" for="levelSelect">Niveau d’apprentissage</label>
+          <select id="levelSelect"></select>
+          <div id="levelLockNote" class="level-lock-note"></div>
+        </div>
+
+        <div id="openingPreview" class="opening-preview"></div>
+        <button id="conceptButton" class="concept-home-btn" type="button">📘 Comprendre l’ouverture</button>
+        <button id="startButton" class="primary-btn" type="button">Commencer la session</button>
+        <button id="bossButton" class="boss-btn" type="button" hidden>👑 Affronter le boss de l’Italienne</button>
+      </div>
+
+      <h2 class="campaign-title">Parcours du répertoire</h2>
+      <div id="campaignGrid" class="campaign-grid"></div>
+
+      <div class="home-tip">
+        Les coups ratés sont mémorisés et rendent les branches concernées plus probables.<br>
+        <small>Progression et récompenses enregistrées uniquement sur cet appareil.</small>
+      </div>
+    </section>
+
+    <section id="trainingScreen" class="screen" aria-labelledby="trainingOpeningName">
+      <header class="training-header">
+        <button id="backButton" class="icon-btn" type="button" aria-label="Retour à l'accueil">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <div class="training-title">
+          <h2 id="trainingOpeningName">Ouverture</h2>
+          <p id="trainingVariationName">Variante</p>
+        </div>
+        <div class="header-actions">
+          <span id="bossChip" class="boss-chip" title="Vies restantes">❤️ 3</span>
+          <span id="comboChip" class="combo-chip" title="Série de bons coups">🔥 0</span>
+          <button id="conceptTrainingButton" class="icon-btn concept-icon-btn" type="button" aria-label="Comprendre le plan de l’ouverture" title="Comprendre le plan">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/><path d="M8 7h8M8 11h6"/></svg>
+          </button>
+          <button id="soundButton" class="icon-btn" type="button" aria-label="Couper le son" title="Son activé"></button>
+          <button id="flipButton" class="icon-btn" type="button" aria-label="Retourner momentanément l'échiquier" title="Retourner l'échiquier">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M18.2 9A7 7 0 0 0 6.1 6.1L4 8"/><path d="M5.8 15A7 7 0 0 0 17.9 17.9L20 16"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <div id="historyStrip" class="history-strip" aria-label="Historique des coups"></div>
+
+      <div class="board-wrap">
+        <div id="board" class="board" role="grid" aria-label="Échiquier interactif"></div>
+      </div>
+
+      <div class="progress-area">
+        <div class="progress-meta">
+          <span id="progressLabel">Progression</span>
+          <span id="progressValue">0 / 0</span>
+        </div>
+        <div class="progress-bar" aria-hidden="true">
+          <div id="progressFill" class="progress-fill"></div>
+        </div>
+      </div>
+
+      <div id="statusCard" class="status-card" aria-live="polite">
+        <div id="statusIcon" class="status-icon" aria-hidden="true">♟</div>
+        <div class="status-text">
+          <strong id="statusTitle">À toi de jouer</strong>
+          <span id="statusMessage">Trouve le prochain coup.</span>
+        </div>
+      </div>
+
+      <div class="hint-options">
+        <label class="hint-toggle" for="hideHintCheckbox">
+          <input id="hideHintCheckbox" type="checkbox">
+          <span><strong>Masquer l’indice stratégique</strong><span class="hint-help"><br>Cache l’objectif du coup tant que tu n’as pas demandé d’indice direct.</span></span>
+        </label>
+      </div>
+
+      <div class="nav-row">
+        <button id="prevButton" class="nav-btn" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg> Précédent
+        </button>
+        <button id="nextButton" class="nav-btn" type="button">
+          Suivant <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </div>
+
+      <div class="toolbar">
+        <button id="restartButton" class="toolbar-btn" type="button">
+          <span class="btn-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v6h6"/></svg></span>Recommencer
+        </button>
+        <button id="hintButton" class="toolbar-btn" type="button">
+          <span class="btn-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M8.5 14.5A6 6 0 1 1 15.5 14.5C14.6 15.2 14 16.1 14 17h-4c0-.9-.6-1.8-1.5-2.5Z"/></svg></span>Indice
+        </button>
+        <button id="homeButton" class="toolbar-btn" type="button">
+          <span class="btn-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/></svg></span>Ouvertures
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <div id="resultBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+    <div class="modal">
+      <div id="modalEmoji" class="modal-emoji" aria-hidden="true">🎉</div>
+      <h3 id="resultTitle">Session terminée</h3>
+      <p id="resultSubtitle" class="modal-subtitle"></p>
+      <div class="results-grid">
+        <div class="result-box"><strong id="resultFirstTry">0 / 0</strong><span>du premier essai</span></div>
+        <div class="result-box"><strong id="resultAccuracy">0 %</strong><span>précision</span></div>
+        <div class="result-box"><strong id="resultErrors">0</strong><span>positions fragiles</span></div>
+        <div class="result-box"><strong id="resultHints">0</strong><span>indices</span></div>
+      </div>
+      <div class="session-reward">
+        <strong id="resultXp">+0 XP</strong>
+        <span id="resultProgress">Progression enregistrée.</span>
+      </div>
+      <div id="unlockBanner" class="unlock-banner"></div>
+      <div id="chestArea" class="chest-area">
+        <button id="openChestButton" class="chest-button" type="button"><span class="chest-icon">🎁</span><span id="chestLabel">Ouvrir le coffre</span></button>
+        <div id="rewardReveal" class="reward-reveal"></div>
+      </div>
+      <div class="modal-actions">
+        <button id="resultRevenge" class="secondary-btn revenge-btn" type="button" hidden>🔥 Défi revanche</button>
+        <button id="resultRestart" class="primary-btn" type="button">Rejouer une session</button>
+        <button id="resultHome" class="secondary-btn" type="button">Retour au parcours</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="conceptBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="conceptTitle">
+    <div class="modal concept-modal">
+      <div class="concept-kicker">Comprendre avant de mémoriser</div>
+      <h3 id="conceptTitle">Concept de l’ouverture</h3>
+      <p id="conceptSubtitle" class="modal-subtitle"></p>
+      <div id="conceptBody"></div>
+      <div class="modal-actions">
+        <button id="conceptStartButton" class="primary-btn" type="button">J’ai compris — commencer</button>
+        <button id="conceptCloseButton" class="secondary-btn" type="button">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+  <script src="js/data/openings.js"></script>
+  <script src="js/assets/pieces-init.js"></script>
+  <script src="js/assets/piece-01-wp.js"></script>
+  <script src="js/assets/piece-02-wn.js"></script>
+  <script src="js/assets/piece-03-wb.js"></script>
+  <script src="js/assets/piece-04-wr.js"></script>
+  <script src="js/assets/piece-05-wq.js"></script>
+  <script src="js/assets/piece-06-wk.js"></script>
+  <script src="js/assets/piece-07-bp.js"></script>
+  <script src="js/assets/piece-08-bn.js"></script>
+  <script src="js/assets/piece-09-bb.js"></script>
+  <script src="js/assets/piece-10-br.js"></script>
+  <script src="js/assets/piece-11-bq.js"></script>
+  <script src="js/assets/piece-12-bk.js"></script>
+  <script src="js/assets/sounds-init.js"></script>
+  <script src="js/assets/sounds-01.js"></script>
+  <script src="js/assets/sounds-02.js"></script>
+  <script src="js/assets/sounds-03.js"></script>
+  <script src="js/assets/sounds-04.js"></script>
+  <script src="js/app/core.js"></script>
+  <script src="js/app/progression.js"></script>
+  <script src="js/app/v7.js"></script>
 </body>
 </html>
