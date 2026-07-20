@@ -1,0 +1,75 @@
+name: Materialize V7.1 split
+
+on:
+  push:
+    branches:
+      - refactor/v7.1-split
+    paths:
+      - .payload/READY
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: refactor/v7.1-split
+          fetch-depth: 0
+
+      - name: Reassemble frozen source payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .payload/part-*.txt | base64 --decode > /tmp/v71-source-and-splitter.tar.gz
+          echo "0b258abead12302bd5a33680c291b80caaca63038a637dd0a042f1040f2bcd4e  /tmp/v71-source-and-splitter.tar.gz" | sha256sum --check
+
+      - name: Restore exact source and split mechanically
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf baseline tools v71-preview validation-report.json VALIDATION.md
+          tar -xzf /tmp/v71-source-and-splitter.tar.gz
+          mkdir -p v71-preview/vendor
+          curl --fail --silent --show-error --location \
+            https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js \
+            --output v71-preview/vendor/chess.min.js
+          python3 tools/split_v71.py
+
+      - name: Validate generated files
+        shell: bash
+        run: |
+          set -euo pipefail
+          (cd baseline && sha256sum --check SHA256.txt)
+          test -s v71-preview/vendor/chess.min.js
+          grep -q "Chess" v71-preview/vendor/chess.min.js
+          for file in v71-preview/*.js v71-preview/vendor/*.js; do
+            node --check "$file"
+          done
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path('validation-report.json').read_text(encoding='utf-8'))
+          assert report['baseline_restores_exactly'] is True
+          assert report['css_exact_extraction'] is True
+          assert report['application_code_exact_except_piece_asset_extraction'] is True
+          assert report['piece_image_values_exact'] is True
+          assert report['missing_html_ids'] == []
+          assert report['duplicate_html_ids'] == []
+          assert report['main_branch_modified'] is False
+          print('Validation structurelle V7.1 : OK')
+          PY
+
+      - name: Commit canonical split
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .payload .github/workflows/materialize-v71.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Sépare mécaniquement la V7.1 et valide la base"
+          git push origin HEAD:refactor/v7.1-split
