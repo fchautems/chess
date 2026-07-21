@@ -1,4 +1,4 @@
-name: Retrouver les fichiers V7.1 complets
+name: Identifier le meilleur candidat V7.1
 
 on:
   pull_request:
@@ -18,11 +18,11 @@ jobs:
           ref: refactor/v7.1-split-clean
           fetch-depth: 0
 
-      - name: Inspecter les arbres complets des commits récupérables
+      - name: Chercher la source exacte ou un paquet complet
         shell: bash
         run: |
           set -u
-          REPORT=V71_COMPLETE_FILE_CANDIDATES.txt
+          REPORT=V71_BEST_CANDIDATES.txt
           : > "$REPORT"
           grep '^## [0-9a-f]\{40\}$' RECOVERABLE_V71_COMMITS.txt | awk '{print $2}' > /tmp/event-shas.txt
 
@@ -30,25 +30,32 @@ jobs:
             [ -n "$sha" ] || continue
             git fetch --quiet origin "$sha" 2>/dev/null || continue
             git ls-tree -rl "$sha" > /tmp/tree.txt 2>/dev/null || continue
-            matches=$(grep -E '(^|[[:space:]])(baseline/entraineur_ouvertures_echecs_v7_1\.html|v71-preview/(index\.html|styles\.css|app(-[0-9]+)?\.js|vendor/chess\.min\.js)|app\.js|app-data\.js|styles\.css)$' /tmp/tree.txt || true)
-            blob_match=$(grep '4a00914d628f2e6348d930a063e3fb4861d56142' /tmp/tree.txt || true)
-            if [ -n "$matches$blob_match" ]; then
+
+            exact=$(grep '4a00914d628f2e6348d930a063e3fb4861d56142' /tmp/tree.txt || true)
+            preview_index=$(grep -E '[[:space:]]v71-preview/index\.html$' /tmp/tree.txt || true)
+            preview_css=$(grep -E '[[:space:]]v71-preview/styles\.css$' /tmp/tree.txt || true)
+            preview_js=$(grep -E '[[:space:]]v71-preview/(app\.js|app-[0-9]+\.js)$' /tmp/tree.txt || true)
+
+            if [ -n "$exact" ] || { [ -n "$preview_index" ] && [ -n "$preview_css" ] && [ -n "$preview_js" ]; }; then
               {
                 echo "## $sha"
                 git show -s --format='date=%cI%nmessage=%s%nparents=%P' "$sha"
-                echo 'matching-tree-entries:'
-                printf '%s\n' "$matches"
-                if [ -n "$blob_match" ]; then
-                  echo 'exact-known-blob:'
-                  printf '%s\n' "$blob_match"
+                [ -z "$exact" ] || { echo 'EXACT_SOURCE:'; printf '%s\n' "$exact"; }
+                if [ -n "$preview_index" ] && [ -n "$preview_css" ] && [ -n "$preview_js" ]; then
+                  echo 'COMPLETE_PREVIEW:'
+                  printf '%s\n%s\n%s\n' "$preview_index" "$preview_css" "$preview_js"
                 fi
                 echo
               } >> "$REPORT"
             fi
           done < /tmp/event-shas.txt
 
+          if [ ! -s "$REPORT" ]; then
+            echo 'Aucun candidat complet retrouvé.' > "$REPORT"
+          fi
+
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$REPORT"
-          git commit -m 'Repère les fichiers V7.1 complets récupérables' || true
+          git commit -m 'Identifie le meilleur candidat V7.1' || true
           git push origin HEAD:refactor/v7.1-split-clean
