@@ -1,0 +1,1 @@
+Le paquet de publication est transféré en fragments de 10 000 caractères via une issue technique, puis vérifié par SHA-256 avant toute écriture sur `main`.
