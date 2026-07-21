@@ -6,6 +6,11 @@ on:
       - v71-clean
     paths:
       - .v71-step20-trigger
+  pull_request_target:
+    branches:
+      - v71-clean
+    types:
+      - opened
 
 permissions:
   contents: write
