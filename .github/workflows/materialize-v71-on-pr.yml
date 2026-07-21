@@ -18,32 +18,30 @@ jobs:
           ref: refactor/v7.1-split-clean
           fetch-depth: 0
 
-      - name: Inventorier les états historiques de la V7.1
+      - name: Inventorier toutes les branches de migration
         shell: bash
         run: |
           set -euo pipefail
-          REPORT=HISTORICAL_V71_INVENTORY.txt
+          REPORT=BRANCH_V71_INVENTORY.txt
           {
-            echo '# Inventaire des états historiques V7.1'
+            echo '# Inventaire des branches V7.1'
             echo
-            for commit in \
-              31c292f1bd622fec5f27065bb5afea252b0a6cf9 \
-              78dbb64d5e2b9788c38d418ef1183e433533d95e \
-              fdbb71f694e64727cfe57f4cd7906057118f1f85 \
-              1dfa1a9a55ad8ecab578a22de1796f798931df8a \
-              235c2d620fcd91025505f496dcd20063ba5b0cfe \
-              d424f158a04f464026b9d0efd8fd02bffbd7f7c5 \
-              9dc37e447f7d65f8dc61f7c5b084e5b0f3dd0953 \
-              a432892bb3ddf6c07149679469beca574cf1c526; do
-              echo "## $commit"
-              git show -s --format='%H %s' "$commit"
-              git ls-tree -rl "$commit" | awk '{print $4, $5}' | sort
+            git branch -r
+            echo
+            for ref in \
+              origin/main \
+              origin/refactor/v7-modular \
+              origin/refactor/v7.1-split \
+              origin/refactor/v7.1-split-clean \
+              origin/trigger/v71-materialize; do
+              echo "## $ref"
+              git log -1 --format='%H %s' "$ref"
+              git ls-tree -rl "$ref" | awk '{print $4, $5}' | sort
               echo
             done
           } > "$REPORT"
-
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$REPORT"
-          git commit -m 'Inventorie les fichiers historiques de la V7.1' || true
+          git commit -m 'Inventorie les branches de migration V7.1' || true
           git push origin HEAD:refactor/v7.1-split-clean
