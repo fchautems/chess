@@ -1,0 +1,70 @@
+# Inventaire des états historiques V7.1
+
+## 31c292f1bd622fec5f27065bb5afea252b0a6cf9
+31c292f1bd622fec5f27065bb5afea252b0a6cf9 Ajoute l’entraîneur d’ouvertures V7.1
+7 README.md
+9890 index.html
+
+## 78dbb64d5e2b9788c38d418ef1183e433533d95e
+78dbb64d5e2b9788c38d418ef1183e433533d95e Ajoute les styles de l’application
+68 styles.css
+7 README.md
+9890 index.html
+
+## fdbb71f694e64727cfe57f4cd7906057118f1f85
+fdbb71f694e64727cfe57f4cd7906057118f1f85 Ajoute la première partie des styles
+14964 styles/part-1.css
+68 styles.css
+7 README.md
+9890 index.html
+
+## 1dfa1a9a55ad8ecab578a22de1796f798931df8a
+1dfa1a9a55ad8ecab578a22de1796f798931df8a Ajoute la seconde partie des styles
+10802 styles/part-2.css
+14964 styles/part-1.css
+68 styles.css
+7 README.md
+9890 index.html
+
+## 235c2d620fcd91025505f496dcd20063ba5b0cfe
+235c2d620fcd91025505f496dcd20063ba5b0cfe Ajoute le chargeur des données
+10802 styles/part-2.css
+132 app-data.js
+14964 styles/part-1.css
+68 styles.css
+7 README.md
+9890 index.html
+
+## d424f158a04f464026b9d0efd8fd02bffbd7f7c5
+d424f158a04f464026b9d0efd8fd02bffbd7f7c5 Ajoute le chargeur de l’entraînement
+10802 styles/part-2.css
+132 app-data.js
+140 app-training.js
+14964 styles/part-1.css
+68 styles.css
+7 README.md
+9890 index.html
+
+## 9dc37e447f7d65f8dc61f7c5b084e5b0f3dd0953
+9dc37e447f7d65f8dc61f7c5b084e5b0f3dd0953 Ajoute le chargeur des résultats
+10802 styles/part-2.css
+132 app-data.js
+140 app-training.js
+14964 styles/part-1.css
+414 app-results.js
+68 styles.css
+7 README.md
+9890 index.html
+
+## a432892bb3ddf6c07149679469beca574cf1c526
+a432892bb3ddf6c07149679469beca574cf1c526 Ajoute l’état et les utilitaires de l’application
+10802 styles/part-2.css
+11702 app-state.js
+132 app-data.js
+140 app-training.js
+14964 styles/part-1.css
+414 app-results.js
+68 styles.css
+7 README.md
+9890 index.html
+
