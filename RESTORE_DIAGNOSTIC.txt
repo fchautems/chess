@@ -1,0 +1,38 @@
+# Diagnostic restauration V7.1
+Tue Jul 21 08:27:12 UTC 2026
+
+## Fichiers source
+total 52
+drwxr-xr-x 2 runner runner  4096 Jul 21 08:27 .
+drwxr-xr-x 3 runner runner  4096 Jul 21 08:27 ..
+-rw-r--r-- 1 runner runner   152 Jul 21 08:27 README.md
+-rw-r--r-- 1 runner runner 15334 Jul 21 08:27 v71.html.gz.b64.part01
+-rw-r--r-- 1 runner runner 24521 Jul 21 08:27 v71.html.gz.b64.part02
+
+### baseline/source/v71.html.gz.b64.part01
+15334 baseline/source/v71.html.gz.b64.part01
+début: H4sIAAAAAAAAA+w8
+fin: TQ/R9DAPO8toud67
+### baseline/source/v71.html.gz.b64.part02
+24521 baseline/source/v71.html.gz.b64.part02
+début: HTQ/R9DAPO8toud6
+fin: 8yGA62uJ1IXp8mwV
+
+## Méthode 1 : concaténer puis décoder
+base64: invalid input
+base64_status=1
+29891 /tmp/v71.html.gz
+
+gzip: /tmp/v71.html.gz: invalid compressed data--format violated
+gzip_status=1
+
+## Méthode 2 : décoder chaque fragment
+base64: invalid input
+fragment_status=1 file=baseline/source/v71.html.gz.b64.part01
+base64: invalid input
+fragment_status=1 file=baseline/source/v71.html.gz.b64.part02
+boucle_status=0
+29890 /tmp/v71.html.gz
+
+gzip: /tmp/v71.html.gz: invalid compressed data--format violated
+gzip_status=1
