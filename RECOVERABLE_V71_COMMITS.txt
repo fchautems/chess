@@ -1,0 +1,637 @@
+## 01a96f3a276d171a6ba1fddfc876539c160f7f45
+date=2026-07-21T01:29:01+02:00
+message=Ajoute la construction contrôlée de la V7.1 séparée
+parents=13508c3a49759069d0ef969d53379463818946c5
+files:
+A	.github/workflows/build-v71-split.yml
+
+## 07be295d2d0fdf65e3c82cabb5cab9fff4eb37e1
+date=2026-07-21T11:06:53+02:00
+message=Charge la source exacte V7.1 — fragment 3/10
+parents=09b5eaf6d5274624808ffca114f51822fec62f16
+files:
+A	baseline/exact/v71.html.gz.b64.part03
+
+## 08235817a53498d28a33feb55498f5d59e130fa5
+date=2026-07-21T00:31:38+02:00
+message=Ajoute l’empreinte de la source V7.1
+parents=b3cbfbb06958588a6a7efd1e24242d70f3043184
+files:
+A	baseline/SHA256.txt
+
+## 08e2afe8988985e53cb8b5b12b924ca41eb7d032
+date=2026-07-21T00:44:56+02:00
+message=Test du transport 10k V7.1
+parents=76f8491fb0633ff29b09776aeaae8ee0d5df45b6
+files:
+A	.payload/test-10k.txt
+
+## 09b5eaf6d5274624808ffca114f51822fec62f16
+date=2026-07-21T11:02:39+02:00
+message=Charge la source exacte V7.1 — fragment 2/6
+parents=7be126dc077cd37f1b075c1295a458316b34c292
+files:
+A	baseline/exact/v71.html.gz.b64.part02
+
+## 0a111c58a83382c5fa51dc2cd6f6efba45c2dadc
+date=2026-07-20T15:00:06+02:00
+message=Ajoute la première moitié des styles de campagne
+parents=ac5e171da29f34a7fe7b22a4e4b9705501f68bd3
+files:
+A	css/styles-campaign-1.css
+
+## 0b3e688e5bd69091d20557b5297c66b0248e674d
+date=2026-07-21T13:03:28+02:00
+message=Corrige la mesure des fragments V7.1
+parents=930d987ee65a77e85da936ec930e3fd829da51ca
+files:
+M	.github/workflows/materialize-v71-on-pr.yml
+
+## 11e34783cc5b31c5406b365a633843984cdad1b6
+date=2026-07-21T10:25:13+02:00
+message=Restaure robustement la source V7.1 fragmentée
+parents=190650a7ca8db7378f3e74110827bb6b96f38e1d
+files:
+M	.github/workflows/materialize-v71-on-pr.yml
+
+## 13508c3a49759069d0ef969d53379463818946c5
+date=2026-07-21T01:25:26+02:00
+message=Gèle la source V7.1 — partie 2/15
+parents=e82d38b8f04b7849b36034a1d73896c4fa448a0c
+files:
+A	baseline/source/v71.html.gz.b64.part02
+
+## 14197e162eeedbc6b45463218a4d22e5b9f1198e
+date=2026-07-20T19:08:53+02:00
+message=Ajoute la logique principale séparée
+parents=aa5c57557b996bcb1221fbb8389fa8f7c64690f0
+files:
+A	app.js
+
+## 190650a7ca8db7378f3e74110827bb6b96f38e1d
+date=2026-07-21T10:22:09+02:00
+message=Restaure la V7.1 depuis son blob Git exact
+parents=6bacb1ad9d3eb9a6d4ad54319cd34f72b44d1280
+files:
+M	.github/workflows/materialize-v71-on-pr.yml
+
+## 19438dace4a2400c08100774e7cb9555b4048a2f
+date=2026-07-21T00:50:16+02:00
+message=Ajoute l’asset exact du pion noir V7.1
+parents=f63fec84b86d03834382362935bf7d437132b51f
+files:
+A	v71-preview/assets/pieces/bp.js
+
+## 1d2f959f1eeaa3b30a074c8fcc9e4de5880e560d
+date=2026-07-21T10:19:35+02:00
+message=Ajoute le déclenchement isolé de la génération V7.1
+parents=91b67f9fe91660e41248ab72cca1d44dd6e3bdb6
+files:
+A	.github/workflows/materialize-v71-on-pr.yml
+
+## 1da1bde7b403cfd7c0b362a1be3bae783169e3f4
+date=2026-07-21T10:16:46+02:00
+message=Relance la génération contrôlée de la V7.1
+parents=ca49cf4ebe47263f7a4466c6ea1a027d0a331a88
+files:
+M	.v71-build-trigger
+
+## 1dfa1a9a55ad8ecab578a22de1796f798931df8a
+date=2026-07-20T00:47:14+02:00
+message=Ajoute la seconde partie des styles
+parents=fdbb71f694e64727cfe57f4cd7906057118f1f85
+files:
+A	styles/part-2.css
+
+## 235c2d620fcd91025505f496dcd20063ba5b0cfe
+date=2026-07-20T00:48:23+02:00
+message=Ajoute le chargeur des données
+parents=1dfa1a9a55ad8ecab578a22de1796f798931df8a
+files:
+A	app-data.js
+
+## 2758407b23c65156c1ad2dfccbe5c4902cdb9f28
+date=2026-07-21T10:36:50+02:00
+message=Déclenche l’inventaire historique V7.1
+parents=632e3965102cc4b9b46316886b5b580ce8ec09e8
+files:
+M	.materialize-request
+
+## 2ba88c0c88fbc2609931d42650d913d10bd0f221
+date=2026-07-21T11:21:27+02:00
+message=Charge la source exacte V7.1 — fragment 5a
+parents=4977505f6c9e7afd8de60305f06b8c58151abd12
+files:
+A	baseline/exact/v71.html.gz.b64.part05a
+
+## 30226def4130dd9e46cbb600bbb9e9b2aee99736
+date=2026-07-21T00:32:23+02:00
+message=Ajoute le HTML V7.1 séparé
+parents=7cfefba2eb60aae80fec724519c481f858a4a2cd
+files:
+A	v71-preview/index.html
+
+## 31c292f1bd622fec5f27065bb5afea252b0a6cf9
+date=2026-07-20T00:39:49+02:00
+message=Ajoute l’entraîneur d’ouvertures V7.1
+parents=388941b547d5e8726556e19b8c5445145f02b2f8
+files:
+A	index.html
+
+## 31f7f3cfe2d87556abc8a1c4cb952c7e0e7f41d4
+date=2026-07-20T13:24:58+02:00
+message=Publie une version autonome et fonctionnelle de l’entraîneur
+parents=a432892bb3ddf6c07149679469beca574cf1c526
+files:
+M	index.html
+
+## 39d2a3f18ee846b1232a537e6ca36967eb0b41d6
+date=2026-07-21T11:30:38+02:00
+message=Charge la source exacte V7.1 — fragment 6a
+parents=4b49dbc156944839a64b41eca2d24895208074e5
+files:
+A	baseline/exact/v71.html.gz.b64.part06a
+
+## 42f615231a1c6cfa6b66a530734c2054eda5d934
+date=2026-07-21T11:37:40+02:00
+message=Charge la source exacte V7.1 — fragment 6c
+parents=e8ff80dc8cdea7cd929e0608a8e0934a20ccbaf5
+files:
+A	baseline/exact/v71.html.gz.b64.part06c
+
+## 432577b175cf47a6ce9120f53fa3f41e97d7a31e
+date=2026-07-21T01:05:10+02:00
+message=Charge le paquet V7.1 — partie 7/12
+parents=98e8c63f7036eba9167e886992b1978de048671a
+files:
+A	.payload/archive-part-007.js
+
+## 485cc5c6e7efe33e0fb8dae14462211c8dfd7a98
+date=2026-07-21T13:20:22+02:00
+message=Prépare la récupération des commits V7.1 perdus
+parents=538f73336ad520b747669b224ef3f93d590d4c56
+files:
+M	.github/workflows/materialize-v71-on-pr.yml
+
+## 4977505f6c9e7afd8de60305f06b8c58151abd12
+date=2026-07-21T11:15:25+02:00
+message=Charge la source exacte V7.1 — fragment 4/10
+parents=07be295d2d0fdf65e3c82cabb5cab9fff4eb37e1
+files:
+A	baseline/exact/v71.html.gz.b64.part04
+
+## 4b49dbc156944839a64b41eca2d24895208074e5
+date=2026-07-21T11:26:18+02:00
+message=Charge la source exacte V7.1 — fragment 5c
+parents=ea5137dafc12dc5cd20457e098cc11b9ebd5e6f1
+files:
+A	baseline/exact/v71.html.gz.b64.part05c
+
+## 4ceb384b46608bfdbd8e9ee667fa756790ad31b6
+date=2026-07-21T10:42:55+02:00
+message=Déclenche l’inventaire des branches V7.1
+parents=2758407b23c65156c1ad2dfccbe5c4902cdb9f28
+files:
+M	.materialize-request
+
+## 4d444b9a75c233ad825d7e57e7e73436bda6034b
+date=2026-07-20T19:30:31+02:00
+message=Restaure l’interface complète V7.1
+parents=629606d8c595c24534f6e07e06a96197254d8bb2
+files:
+M	index.html
+
+## 538f73336ad520b747669b224ef3f93d590d4c56
+date=2026-07-21T11:04:06Z
+message=Mesure précisément les fragments V7.1
+parents=0b3e688e5bd69091d20557b5297c66b0248e674d
+files:
+M	EXACT_PARTS_INVENTORY.txt
+
+## 58e5167ced3d2914e1ded79992a4851fe6b970b4
+date=2026-07-21T01:29:10+02:00
+message=Déclenche la construction validée de la V7.1
+parents=01a96f3a276d171a6ba1fddfc876539c160f7f45
+files:
+A	.v71-build-trigger
+
+## 5a46331f8dbde4a61ee227484df729875967a104
+date=2026-07-21T08:27:12Z
+message=Enregistre le diagnostic de restauration V7.1
+parents=814fa4a5885352ff417a541824ea1113b334a8df
+files:
+A	RESTORE_DIAGNOSTIC.txt
+
+## 625f7f51bf8c238cd08de5525dfcca1c741f9f07
+date=2026-07-21T08:43:09Z
+message=Inventorie les branches de migration V7.1
+parents=6bd2f343b1c565f1542356da15916a92a527fa26
+files:
+A	BRANCH_V71_INVENTORY.txt
+
+## 629606d8c595c24534f6e07e06a96197254d8bb2
+date=2026-07-20T19:10:57+02:00
+message=Supprime le second ancien fragment de styles
+parents=e2aa93fa29c62cba50a415f03d7c537fd9839eb4
+files:
+D	styles/part-2.css
+
+## 632e3965102cc4b9b46316886b5b580ce8ec09e8
+date=2026-07-21T10:27:01+02:00
+message=Déclenche le diagnostic de restauration V7.1
+parents=b243c64306b2c9859f68f9a22d96a974174374a4
+files:
+M	.materialize-request
+
+## 64cf6a4d8d00e440e9b641b3371cee6009f45473
+date=2026-07-20T19:10:45+02:00
+message=Supprime l’ancien chargeur de résultats
+parents=dadb8056d61ff16e21c4b2c226def736404889fc
+files:
+D	app-results.js
+
+## 6746135a20def3241d0b9bc12128908d33dea403
+date=2026-07-21T13:03:54+02:00
+message=Relance la mesure précise des fragments V7.1
+parents=6af7428a10c902e3fd00691f27dd52b83192b3b7
+files:
+M	.materialize-request
+
+## 6af7428a10c902e3fd00691f27dd52b83192b3b7
+date=2026-07-21T13:01:53+02:00
+message=Déclenche l’inventaire des fragments V7.1
+parents=4ceb384b46608bfdbd8e9ee667fa756790ad31b6
+files:
+M	.materialize-request
+
+## 6bacb1ad9d3eb9a6d4ad54319cd34f72b44d1280
+date=2026-07-21T10:20:08+02:00
+message=Documente la source compressée temporaire
+parents=e7476c9ad13999f660950830200df2051a541e84
+files:
+A	baseline/source/README.md
+
+## 6bd2f343b1c565f1542356da15916a92a527fa26
+date=2026-07-21T10:42:34+02:00
+message=Inventorie les branches de migration V7.1
+parents=e6f4d6458ba642c63d9d4be9568d359e47fd8a5a
+files:
+M	.github/workflows/materialize-v71-on-pr.yml
+
+## 6e81e2e55024f27abda57501f91446aaff05d4ce
+date=2026-07-20T14:54:29+02:00
+message=Démarre la migration modulaire de la V7.1
+parents=ae16bd2afda41205439ad35641609eb65343613e
+files:
+A	MIGRATION.md
+
+## 704e4a3489a81058070a2406fab760515d8bff57
+date=2026-07-21T10:19:45+02:00
+message=Ajoute l’empreinte de référence V7.1
+parents=1d2f959f1eeaa3b30a074c8fcc9e4de5880e560d
+files:
+A	baseline/SHA256.txt
+
+## 70c745d4d17ffef5cfe7a898be36dc1136025e68
+date=2026-07-20T16:31:42+02:00
+message=Teste le transfert de fichier local
+parents=c25831eff39bbc54029db7c1343e400eec6aaddc
+files:
+A	_path_upload_test.txt
+
+## 725cd87bf626fafcb96181a3df45e91f3cebcd66
+date=2026-07-21T00:56:03+02:00
+message=Charge le paquet V7.1 — partie 3/20
+parents=df3fc23f9ebce440730a7c905abcea94c08b92d1
+files:
+A	.payload/archive-part-003.js
+
+## 76f8491fb0633ff29b09776aeaae8ee0d5df45b6
+date=2026-07-21T00:43:27+02:00
+message=Test du transport contrôlé V7.1
+parents=b257a4928d9715461bc009981522928b2ed76315
+files:
+A	.payload/test-small.txt
+
+## 78dbb64d5e2b9788c38d418ef1183e433533d95e
+date=2026-07-20T00:45:01+02:00
+message=Ajoute les styles de l’application
+parents=31c292f1bd622fec5f27065bb5afea252b0a6cf9
+files:
+A	styles.css
+
+## 7be126dc077cd37f1b075c1295a458316b34c292
+date=2026-07-21T11:00:36+02:00
+message=Charge la source exacte V7.1 — fragment 1/6
+parents=85211371a62a905061eb01fee593fa4ad1d3a025
+files:
+A	baseline/exact/v71.html.gz.b64.part01
+
+## 7cfefba2eb60aae80fec724519c481f858a4a2cd
+date=2026-07-21T00:31:47+02:00
+message=Ajoute le rapport de validation mécanique
+parents=08235817a53498d28a33feb55498f5d59e130fa5
+files:
+A	VALIDATION.md
+
+## 7d881b0c15797de037818ded6996d94e08c26824
+date=2026-07-21T13:20:35+02:00
+message=Déclenche la récupération des commits V7.1 perdus
+parents=6746135a20def3241d0b9bc12128908d33dea403
+files:
+M	.materialize-request
+
+## 7da4c78525b7f85980ba62e9e981013a276a0f4d
+date=2026-07-21T11:51:52+02:00
+message=Charge la source exacte V7.1 — fragment 6e2
+parents=c629d67f6da9886271b07165fb37bba447c05dd9
+files:
+A	baseline/exact/v71.html.gz.b64.part06e2
+
+## 814fa4a5885352ff417a541824ea1113b334a8df
+date=2026-07-21T10:26:52+02:00
+message=Ajoute un diagnostic exact de la restauration V7.1
+parents=11e34783cc5b31c5406b365a633843984cdad1b6
+files:
+M	.github/workflows/materialize-v71-on-pr.yml
+
+## 85211371a62a905061eb01fee593fa4ad1d3a025
+date=2026-07-21T10:57:50+02:00
+message=Teste le transfert direct de la source locale
+parents=625f7f51bf8c238cd08de5525dfcca1c741f9f07
+files:
+A	.transfer-path-test
+
+## 91b67f9fe91660e41248ab72cca1d44dd6e3bdb6
+date=2026-07-21T10:19:14+02:00
+message=Ajoute le séparateur mécanique contrôlé de la V7.1
+parents=1da1bde7b403cfd7c0b362a1be3bae783169e3f4
+files:
+A	tools/split_v71.py
+
+## 930d987ee65a77e85da936ec930e3fd829da51ca
+date=2026-07-21T11:02:04Z
+message=Inventorie les fragments exacts V7.1
+parents=a93185df39ba46b3f3f63a36805dc63e77a4dbc6
+files:
+A	EXACT_PARTS_INVENTORY.txt
+
+## 9736a26bab3b416dc037615b83fe72af7df914fe
+date=2026-07-20T19:09:15+02:00
+message=Migre la page vers des fichiers séparés
+parents=14197e162eeedbc6b45463218a4d22e5b9f1198e
+files:
+M	index.html
+
+## 98e8c63f7036eba9167e886992b1978de048671a
+date=2026-07-21T01:02:32+02:00
+message=Charge le paquet V7.1 — partie 6/12
+parents=9b85dd73f8dc6515df7a3eb4b9e9503eb5b618f3
+files:
+A	.payload/archive-part-006.js
+
+## 9a9cd779bc89b624b48623c79a7b84dea1c85488
+date=2026-07-21T13:09:00+02:00
+message=Ajoute le fragment 000 du paquet V7.1
+parents=ae16bd2afda41205439ad35641609eb65343613e
+files:
+A	v71-preview/payload/part-000.b64
+
+## 9ae38cab6681975ed43d9708681b25ada983bfd0
+date=2026-07-20T15:00:54+02:00
+message=Ajoute la seconde moitié des styles de campagne
+parents=0a111c58a83382c5fa51dc2cd6f6efba45c2dadc
+files:
+A	css/styles-campaign-2.css
+
+## 9b85dd73f8dc6515df7a3eb4b9e9503eb5b618f3
+date=2026-07-21T01:00:04+02:00
+message=Charge le paquet V7.1 — partie 5/12
+parents=ef5569b2d66e2465d1640745df084d5bed65d326
+files:
+A	.payload/archive-part-005.js
+
+## 9dc37e447f7d65f8dc61f7c5b084e5b0f3dd0953
+date=2026-07-20T00:49:01+02:00
+message=Ajoute le chargeur des résultats
+parents=d424f158a04f464026b9d0efd8fd02bffbd7f7c5
+files:
+A	app-results.js
+
+## a432892bb3ddf6c07149679469beca574cf1c526
+date=2026-07-20T13:22:40+02:00
+message=Ajoute l’état et les utilitaires de l’application
+parents=9dc37e447f7d65f8dc61f7c5b084e5b0f3dd0953
+files:
+A	app-state.js
+
+## a8b4c3ca1b164513bff101fb34f4a0289ed399f9
+date=2026-07-20T19:07:39+02:00
+message=Sépare les styles de la page
+parents=ae16bd2afda41205439ad35641609eb65343613e
+files:
+M	styles.css
+
+## a93185df39ba46b3f3f63a36805dc63e77a4dbc6
+date=2026-07-21T13:01:40+02:00
+message=Prépare l’inventaire exact des fragments V7.1
+parents=7da4c78525b7f85980ba62e9e981013a276a0f4d
+files:
+M	.github/workflows/materialize-v71-on-pr.yml
+
+## aa5c57557b996bcb1221fbb8389fa8f7c64690f0
+date=2026-07-20T19:08:02+02:00
+message=Sépare les données des ouvertures
+parents=a8b4c3ca1b164513bff101fb34f4a0289ed399f9
+files:
+M	app-data.js
+
+## ac5e171da29f34a7fe7b22a4e4b9705501f68bd3
+date=2026-07-20T14:59:06+02:00
+message=Ajoute le point d’entrée des styles modulaires
+parents=e1a90c877f6e939b380034705a73eec639e2ea4a
+files:
+A	css/styles.css
+
+## ae16bd2afda41205439ad35641609eb65343613e
+date=2026-07-20T13:39:39+02:00
+message=Corrige l’affichage de l’échiquier sur mobile
+parents=31f7f3cfe2d87556abc8a1c4cb952c7e0e7f41d4
+files:
+M	index.html
+
+## b243c64306b2c9859f68f9a22d96a974174374a4
+date=2026-07-21T10:25:26+02:00
+message=Relance la restauration robuste de la V7.1
+parents=e79969532593aa304c632e2a251fede35fef230b
+files:
+M	.materialize-request
+
+## b257a4928d9715461bc009981522928b2ed76315
+date=2026-07-21T00:39:27+02:00
+message=Prépare la reconstruction contrôlée de la V7.1
+parents=30226def4130dd9e46cbb600bbb9e9b2aee99736
+files:
+A	.github/workflows/materialize-v71.yml
+
+## b3cbfbb06958588a6a7efd1e24242d70f3043184
+date=2026-07-21T00:31:30+02:00
+message=Ajoute la référence de restauration V7.1
+parents=ae16bd2afda41205439ad35641609eb65343613e
+files:
+A	baseline/README.md
+
+## be2046dc7260e5f4b8c724f04cefc1c2186867f3
+date=2026-07-20T15:03:27+02:00
+message=Remplace la page monolithique par la structure V7.1 modulaire
+parents=9ae38cab6681975ed43d9708681b25ada983bfd0
+files:
+M	index.html
+
+## c25831eff39bbc54029db7c1343e400eec6aaddc
+date=2026-07-20T16:28:41+02:00
+message=Migre la V7.1 vers les fichiers modulaires
+parents=be2046dc7260e5f4b8c724f04cefc1c2186867f3
+files:
+M	index.html
+
+## c5aee57052dc9093af42876e301c0e7a9fdb4a1e
+date=2026-07-21T10:36:33+02:00
+message=Inventorie l’ancienne V7.1 modulaire dans Git
+parents=5a46331f8dbde4a61ee227484df729875967a104
+files:
+M	.github/workflows/materialize-v71-on-pr.yml
+
+## c629d67f6da9886271b07165fb37bba447c05dd9
+date=2026-07-21T11:47:45+02:00
+message=Charge la source exacte V7.1 — fragment 6e1
+parents=42f615231a1c6cfa6b66a530734c2054eda5d934
+files:
+A	baseline/exact/v71.html.gz.b64.part06e1
+
+## ca49cf4ebe47263f7a4466c6ea1a027d0a331a88
+date=2026-07-21T01:33:47+02:00
+message=Documente les tests fonctionnels mobiles de la V7.1
+parents=58e5167ced3d2914e1ded79992a4851fe6b970b4
+files:
+A	RUNTIME_VALIDATION.md
+
+## d424f158a04f464026b9d0efd8fd02bffbd7f7c5
+date=2026-07-20T00:48:42+02:00
+message=Ajoute le chargeur de l’entraînement
+parents=235c2d620fcd91025505f496dcd20063ba5b0cfe
+files:
+A	app-training.js
+
+## dadb8056d61ff16e21c4b2c226def736404889fc
+date=2026-07-20T19:10:37+02:00
+message=Supprime l’ancien chargeur d’entraînement
+parents=f7b0457bb952a3a9b9cbd320cb821487faad7541
+files:
+D	app-training.js
+
+## df3fc23f9ebce440730a7c905abcea94c08b92d1
+date=2026-07-21T00:54:16+02:00
+message=Charge le paquet V7.1 — partie 2/37
+parents=19438dace4a2400c08100774e7cb9555b4048a2f
+files:
+A	.payload/archive-part-002.js
+
+## e0d360cb28e184fff16606680b90aaf21523ee11
+date=2026-07-21T13:14:39+02:00
+message=Ajoute le bloc 001 du paquet V7.1
+parents=9a9cd779bc89b624b48623c79a7b84dea1c85488
+files:
+A	v71-preview/payload/block-001.b64
+
+## e1a90c877f6e939b380034705a73eec639e2ea4a
+date=2026-07-20T14:56:15+02:00
+message=Extrait les styles de base de la V7.1
+parents=6e81e2e55024f27abda57501f91446aaff05d4ce
+files:
+A	css/styles-base.css
+
+## e2aa93fa29c62cba50a415f03d7c537fd9839eb4
+date=2026-07-20T19:10:50+02:00
+message=Supprime l’ancien fragment de styles
+parents=64cf6a4d8d00e440e9b641b3371cee6009f45473
+files:
+D	styles/part-1.css
+
+## e6f4d6458ba642c63d9d4be9568d359e47fd8a5a
+date=2026-07-21T08:37:00Z
+message=Inventorie les fichiers historiques de la V7.1
+parents=c5aee57052dc9093af42876e301c0e7a9fdb4a1e
+files:
+A	HISTORICAL_V71_INVENTORY.txt
+
+## e7476c9ad13999f660950830200df2051a541e84
+date=2026-07-21T10:19:57+02:00
+message=Documente la base V7.1 gelée
+parents=704e4a3489a81058070a2406fab760515d8bff57
+files:
+A	baseline/README.md
+
+## e79969532593aa304c632e2a251fede35fef230b
+date=2026-07-21T10:22:33+02:00
+message=Relance la matérialisation depuis le blob exact
+parents=e842aca4444eeb3c6cf5b52624827c106d729ee7
+files:
+M	.materialize-request
+
+## e82d38b8f04b7849b36034a1d73896c4fa448a0c
+date=2026-07-21T01:21:56+02:00
+message=Gèle la source V7.1 — partie 1/15
+parents=ae16bd2afda41205439ad35641609eb65343613e
+files:
+A	baseline/source/v71.html.gz.b64.part01
+
+## e842aca4444eeb3c6cf5b52624827c106d729ee7
+date=2026-07-21T10:20:37+02:00
+message=Déclenche la matérialisation contrôlée de la V7.1
+parents=6bacb1ad9d3eb9a6d4ad54319cd34f72b44d1280
+files:
+A	.materialize-request
+
+## e8ff80dc8cdea7cd929e0608a8e0934a20ccbaf5
+date=2026-07-21T11:34:58+02:00
+message=Charge la source exacte V7.1 — fragment 6b
+parents=39d2a3f18ee846b1232a537e6ca36967eb0b41d6
+files:
+A	baseline/exact/v71.html.gz.b64.part06b
+
+## ea5137dafc12dc5cd20457e098cc11b9ebd5e6f1
+date=2026-07-21T11:23:39+02:00
+message=Charge la source exacte V7.1 — fragment 5b
+parents=2ba88c0c88fbc2609931d42650d913d10bd0f221
+files:
+A	baseline/exact/v71.html.gz.b64.part05b
+
+## ef5569b2d66e2465d1640745df084d5bed65d326
+date=2026-07-21T00:57:28+02:00
+message=Charge le paquet V7.1 — partie 4/12
+parents=725cd87bf626fafcb96181a3df45e91f3cebcd66
+files:
+A	.payload/archive-part-004.js
+
+## f63fec84b86d03834382362935bf7d437132b51f
+date=2026-07-21T00:45:18+02:00
+message=Adapte la reconstruction au transport segmenté
+parents=08e2afe8988985e53cb8b5b12b924ca41eb7d032
+files:
+M	.github/workflows/materialize-v71.yml
+
+## f7b0457bb952a3a9b9cbd320cb821487faad7541
+date=2026-07-20T19:10:32+02:00
+message=Supprime l’ancien état monolithique
+parents=9736a26bab3b416dc037615b83fe72af7df914fe
+files:
+D	app-state.js
+
+## fdbb71f694e64727cfe57f4cd7906057118f1f85
+date=2026-07-20T00:46:13+02:00
+message=Ajoute la première partie des styles
+parents=78dbb64d5e2b9788c38d418ef1183e433533d95e
+files:
+A	styles/part-1.css
+
