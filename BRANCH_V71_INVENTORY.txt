@@ -1,0 +1,111 @@
+# Inventaire des branches V7.1
+
+  origin/main
+  origin/refactor/v7-modular
+  origin/refactor/v7.1-split
+  origin/refactor/v7.1-split-clean
+  origin/trigger/v71-materialize
+
+## origin/main
+ae16bd2afda41205439ad35641609eb65343613e Corrige l’affichage de l’échiquier sur mobile
+10802 styles/part-2.css
+11702 app-state.js
+132 app-data.js
+140 app-training.js
+14964 styles/part-1.css
+18988 index.html
+414 app-results.js
+68 styles.css
+7 README.md
+
+## origin/refactor/v7-modular
+70c745d4d17ffef5cfe7a898be36dc1136025e68 Teste le transfert de fichier local
+108 css/styles.css
+10802 styles/part-2.css
+11702 app-state.js
+13140 css/styles-base.css
+132 app-data.js
+140 app-training.js
+14964 styles/part-1.css
+414 app-results.js
+45 _path_upload_test.txt
+5736 css/styles-campaign-1.css
+68 styles.css
+6844 css/styles-campaign-2.css
+690 MIGRATION.md
+7 README.md
+9068 index.html
+
+## origin/refactor/v7.1-split
+432577b175cf47a6ce9120f53fa3f41e97d7a31e Charge le paquet V7.1 — partie 7/12
+10000 .payload/test-10k.txt
+10003 .payload/archive-part-003.js
+10003 .payload/archive-part-004.js
+10003 .payload/archive-part-006.js
+10091 .payload/archive-part-002.js
+105 baseline/SHA256.txt
+10802 styles/part-2.css
+11702 app-state.js
+132 app-data.js
+140 app-training.js
+14673 v71-preview/assets/pieces/bp.js
+14964 styles/part-1.css
+18988 index.html
+20022 .payload/archive-part-005.js
+20023 .payload/archive-part-007.js
+2744 .github/workflows/materialize-v71.yml
+3000 .payload/test-small.txt
+414 app-results.js
+426 baseline/README.md
+68 styles.css
+7 README.md
+855 VALIDATION.md
+9738 v71-preview/index.html
+
+## origin/refactor/v7.1-split-clean
+6bd2f343b1c565f1542356da15916a92a527fa26 Inventorie les branches de migration V7.1
+105 baseline/SHA256.txt
+10802 styles/part-2.css
+1164 RESTORE_DIAGNOSTIC.txt
+11702 app-state.js
+132 app-data.js
+140 app-training.js
+1417 .github/workflows/materialize-v71-on-pr.yml
+14964 styles/part-1.css
+152 baseline/source/README.md
+153 baseline/README.md
+15334 baseline/source/v71.html.gz.b64.part01
+1616 RUNTIME_VALIDATION.md
+1812 HISTORICAL_V71_INVENTORY.txt
+18988 index.html
+24521 baseline/source/v71.html.gz.b64.part02
+414 app-results.js
+4344 tools/split_v71.py
+54 .v71-build-trigger
+68 styles.css
+7 README.md
+8823 .github/workflows/build-v71-split.yml
+
+## origin/trigger/v71-materialize
+4ceb384b46608bfdbd8e9ee667fa756790ad31b6 Déclenche l’inventaire des branches V7.1
+105 baseline/SHA256.txt
+10802 styles/part-2.css
+11702 app-state.js
+132 app-data.js
+140 app-training.js
+14964 styles/part-1.css
+152 baseline/source/README.md
+153 baseline/README.md
+15334 baseline/source/v71.html.gz.b64.part01
+1616 RUNTIME_VALIDATION.md
+18988 index.html
+24521 baseline/source/v71.html.gz.b64.part02
+3115 .github/workflows/materialize-v71-on-pr.yml
+414 app-results.js
+4344 tools/split_v71.py
+54 .v71-build-trigger
+68 styles.css
+7 README.md
+77 .materialize-request
+8823 .github/workflows/build-v71-split.yml
+
