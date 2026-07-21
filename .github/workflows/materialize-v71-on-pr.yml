@@ -27,8 +27,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          SOURCE_BLOB="4a00914d628f2e6348d930a063e3fb4861d56142"
           mkdir -p baseline v71-preview/vendor
-          cat baseline/source/v71.html.gz.b64.part* | base64 --decode | gzip -dc > baseline/entraineur_ouvertures_echecs_v7_1.html
+          git cat-file -e "${SOURCE_BLOB}^{blob}"
+          git cat-file blob "$SOURCE_BLOB" > baseline/entraineur_ouvertures_echecs_v7_1.html
           echo "10e266aacf6c75bc9bd91cbad800363754c1ee912abe8329b8ff32ceca570c2f  baseline/entraineur_ouvertures_echecs_v7_1.html" | sha256sum --check
 
       - name: Séparer mécaniquement la V7.1
