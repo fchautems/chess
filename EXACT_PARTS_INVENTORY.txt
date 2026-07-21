@@ -1,0 +1,74 @@
+# Inventaire des fragments Base64 V7.1
+
+## baseline/exact/v71.html.gz.b64.part01
+bytes=
+sha256=
+start=H4sIAAAAAAAC/9S9x5IrS5omtq+nQOextrmnkZkICQTyiiG01hplZW0hgQACEUAI
+end=YkmyK5l+xLNgX+PWUgJh1XYTy52T8hHoreqh0dDeDxMLUj1AtBfcDXWO2IVJrCoc
+
+## baseline/exact/v71.html.gz.b64.part02
+bytes=
+sha256=
+start=wIX3LL0nVQc3SJtFM83PXzbYYwr68g6ecTtYFLfCieqFWILKuPvh7IeQLvD80uxt
+end=/4f/r+ETTv8ZZRz8BaaucTlliOmN0uRWzuDlkW9JTNWRUQqWjpj6RX4Ar/qzHxAP
+
+## baseline/exact/v71.html.gz.b64.part03
+bytes=
+sha256=
+start=ZdAITol/2pnA+d/mq6WijHjrj37T6sTE7drxKH2WPDtpzet0UzIMdeIYENhnVbxC
+end=CEGoAH5gNIB6AR5v+7AFlEDCBAOQXMDu7xUABN4FL3tSMb79HHAQpO0vBKdVahz+
+
+## baseline/exact/v71.html.gz.b64.part04
+bytes=
+sha256=
+start=ettblPPhZC57tfhDgNrw7M3/f/0R8thATUH0twQpWr9/Gr7XxLAlGT+tYzb1P3uL
+end=25evrsTGDPOsMIWR8du975E11hdI6ohDvM3nVz818S4RN5Mn2yiEUoLRmbQ6C1Hz
+
+## baseline/exact/v71.html.gz.b64.part05a
+bytes=
+sha256=
+start=tkLe+/tjMMBqIFq5+tSKcxHe0dd83DwjVbrhDo8L57l0B9jAcASJNTQfIV2MVAc+
+end=K8rXHwlmsfanCNnUFkkwJfdZu5T5zxmpKVIRf2eCaUHztfx7Q7F8gqLyWdlHpfXY
+
+## baseline/exact/v71.html.gz.b64.part05b
+bytes=
+sha256=
+start=YpgyfdOMD6uk1/3XUBWOa/ABIMKK9eMYBIH0KhhH/9BZAKuLGQkkLt+3QGAbpKn8
+end=O9vZCOoJkiSqxtjilBFiZ8zqfgNUg0eJBXZoIZeEj5GBbHcSlEaanmFuRSeUhEan
+
+## baseline/exact/v71.html.gz.b64.part05c
+bytes=
+sha256=
+start=LBDeE58vlDj09w2FE+7HThTov7z0MtfwJlukwCXKWUC9OJ991rLJwm72qnssm8/q
+end=B4X/fAifTnuWWXUNfba0n/1DO9G/f36qcY73gzqfviBF6Fwt+WQS9JYAYXOs8/YQ
+
+## baseline/exact/v71.html.gz.b64.part06a
+bytes=
+sha256=
+start=370/LNMMReKHPZNRznUlgv2GJeQ5pj9wTnFdLJZG9Dj9JjmfpX+N39KK3bWiLsFI
+end=YeGUpOmrZ/Uj9GsfyQNHMLdEVWkVwvKtQHF8zFAPPj926V4/9fzu71p9op9kx6rz
+
+## baseline/exact/v71.html.gz.b64.part06b
+bytes=
+sha256=
+start=XR3ERXJOhLK2v6s1ZZeibLklnEBslFtBf8noeJsYpUN80pCCAFDHcx+Rv7gfmBr1
+end=COI9TrGCDxHTAbyz2VCXKS/ZcIXLtXe3xvNbKLX6Fbqu3iY7ZZ3G79uEBfkPqwqg
+
+## baseline/exact/v71.html.gz.b64.part06c
+bytes=
+sha256=
+start=qwEEJIzqmD5c/NuT7XKEu1WH3NVJ5XfCH6TSDPPvbpwlZJiVdBP2Ej8o5B+zsKgB
+end=dDAEwOBuGRHu0htNOwabNyZATRNxYtQR6QwaFV/nJwKymjg6NtIQpnR1IpFnKoXK
+
+## baseline/exact/v71.html.gz.b64.part06e1
+bytes=
+sha256=
+start=YSfOYCRlgjw2pN8YkndmhfYMMoPyTcJmhYCfw+TEIl6D7UhZkG1RmvLixiXf4gVt
+end=YeGUpOmrZ/Uj9GsfyQNHMLdEVWkVwvKtQHF8zFAPPj926V4/9fzu71p9op9kx6rz
+
+## baseline/exact/v71.html.gz.b64.part06e2
+bytes=
+sha256=
+start=XR3ERXJOhLK2v6s1ZZeibLklnEBslFtBf8noeJsYpUN80pCCAFDHcx+Rv7gfmBr1
+end=COI9TrGCDxHTAbyz2VCXKS/ZcIXLtXe3xvNbKLX6Fbqu3iY7ZZ3G79uEBfkPqwqg
+
