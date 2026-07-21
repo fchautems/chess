@@ -1,4 +1,4 @@
-name: Inventorier les fragments V7.1
+name: Retrouver les commits V7.1 perdus
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  inventory:
+  recover:
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
@@ -18,27 +18,60 @@ jobs:
           ref: refactor/v7.1-split-clean
           fetch-depth: 0
 
-      - name: Inventorier les fragments exacts
+      - name: Lire le journal GitHub et inventorier les commits
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          REPORT=EXACT_PARTS_INVENTORY.txt
-          {
-            echo '# Inventaire des fragments Base64 V7.1'
-            echo
-            for file in baseline/exact/v71.html.gz.b64.part*; do
-              size=$(stat -c '%s' "$file")
-              hash=$(sha256sum "$file" | awk '{print $1}')
-              echo "## $file"
-              echo "bytes=$size"
-              echo "sha256=$hash"
-              printf 'start='; head -c 64 "$file"; echo
-              printf 'end='; tail -c 64 "$file"; echo
-              echo
-            done
-          } > "$REPORT"
+          rm -f /tmp/events-*.json
+          for page in 1 2 3; do
+            curl --fail --silent --show-error \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/$GITHUB_REPOSITORY/events?per_page=100&page=$page" \
+              > "/tmp/events-$page.json"
+          done
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          shas = set()
+          for path in sorted(Path('/tmp').glob('events-*.json')):
+              for event in json.loads(path.read_text(encoding='utf-8')):
+                  if event.get('type') != 'PushEvent':
+                      continue
+                  payload = event.get('payload') or {}
+                  head = payload.get('head')
+                  if head:
+                      shas.add(head)
+                  for commit in payload.get('commits') or []:
+                      sha = commit.get('sha')
+                      if sha:
+                          shas.add(sha)
+          Path('/tmp/event-shas.txt').write_text('\n'.join(sorted(shas)) + '\n', encoding='utf-8')
+          print(f'{len(shas)} commits trouvés dans les événements')
+          PY
+
+          REPORT=RECOVERABLE_V71_COMMITS.txt
+          : > "$REPORT"
+          while IFS= read -r sha; do
+            [ -n "$sha" ] || continue
+            if git fetch --quiet origin "$sha" 2>/dev/null; then
+              {
+                echo "## $sha"
+                git show -s --format='date=%cI%nmessage=%s%nparents=%P' "$sha"
+                echo 'files:'
+                git diff-tree --no-commit-id --name-status -r "$sha"
+                echo
+              } >> "$REPORT"
+            fi
+          done < /tmp/event-shas.txt
+
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$REPORT"
-          git commit -m 'Mesure précisément les fragments V7.1' || true
+          git commit -m 'Inventorie les commits V7.1 récupérables' || true
           git push origin HEAD:refactor/v7.1-split-clean
