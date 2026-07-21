@@ -1,4 +1,4 @@
-name: Retrouver les commits V7.1 perdus
+name: Retrouver les fichiers V7.1 complets
 
 on:
   pull_request:
@@ -18,14 +18,14 @@ jobs:
           ref: refactor/v7.1-split-clean
           fetch-depth: 0
 
-      - name: Lire le journal GitHub et inventorier les commits
+      - name: Inspecter les arbres complets des commits récupérables
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           rm -f /tmp/events-*.json
-          for page in 1 2 3; do
+          for page in 1 2 3 4 5; do
             curl --fail --silent --show-error \
               -H "Authorization: Bearer $GH_TOKEN" \
               -H "Accept: application/vnd.github+json" \
@@ -44,27 +44,29 @@ jobs:
                   if event.get('type') != 'PushEvent':
                       continue
                   payload = event.get('payload') or {}
-                  head = payload.get('head')
-                  if head:
-                      shas.add(head)
+                  if payload.get('head'):
+                      shas.add(payload['head'])
                   for commit in payload.get('commits') or []:
-                      sha = commit.get('sha')
-                      if sha:
-                          shas.add(sha)
+                      if commit.get('sha'):
+                          shas.add(commit['sha'])
           Path('/tmp/event-shas.txt').write_text('\n'.join(sorted(shas)) + '\n', encoding='utf-8')
-          print(f'{len(shas)} commits trouvés dans les événements')
           PY
 
-          REPORT=RECOVERABLE_V71_COMMITS.txt
+          REPORT=V71_COMPLETE_FILE_CANDIDATES.txt
           : > "$REPORT"
           while IFS= read -r sha; do
             [ -n "$sha" ] || continue
-            if git fetch --quiet origin "$sha" 2>/dev/null; then
+            git fetch --quiet origin "$sha" 2>/dev/null || continue
+            tree=$(git ls-tree -rl "$sha")
+            matches=$(printf '%s\n' "$tree" | grep -E '(^|[[:space:]])(baseline/entraineur_ouvertures_echecs_v7_1\.html|v71-preview/(index\.html|styles\.css|app(-[0-9]+)?\.js|vendor/chess\.min\.js)|app\.js|app-data\.js|styles\.css)$' || true)
+            blob_match=$(printf '%s\n' "$tree" | grep '4a00914d628f2e6348d930a063e3fb4861d56142' || true)
+            if [ -n "$matches$blob_match" ]; then
               {
                 echo "## $sha"
                 git show -s --format='date=%cI%nmessage=%s%nparents=%P' "$sha"
-                echo 'files:'
-                git diff-tree --no-commit-id --name-status -r "$sha"
+                echo 'matching-tree-entries:'
+                printf '%s\n' "$matches"
+                [ -z "$blob_match" ] || { echo 'exact-known-blob:'; printf '%s\n' "$blob_match"; }
                 echo
               } >> "$REPORT"
             fi
@@ -73,5 +75,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$REPORT"
-          git commit -m 'Inventorie les commits V7.1 récupérables' || true
+          git commit -m 'Repère les fichiers V7.1 complets récupérables' || true
           git push origin HEAD:refactor/v7.1-split-clean
