@@ -27,11 +27,24 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          SOURCE_BLOB="4a00914d628f2e6348d930a063e3fb4861d56142"
           mkdir -p baseline v71-preview/vendor
-          git cat-file -e "${SOURCE_BLOB}^{blob}"
-          git cat-file blob "$SOURCE_BLOB" > baseline/entraineur_ouvertures_echecs_v7_1.html
-          echo "10e266aacf6c75bc9bd91cbad800363754c1ee912abe8329b8ff32ceca570c2f  baseline/entraineur_ouvertures_echecs_v7_1.html" | sha256sum --check
+          SOURCE=baseline/entraineur_ouvertures_echecs_v7_1.html
+          PARTS=(baseline/source/v71.html.gz.b64.part*)
+          rm -f "$SOURCE" /tmp/v71.html.gz
+
+          if cat "${PARTS[@]}" | base64 --decode > /tmp/v71.html.gz 2>/tmp/base64-error.log \
+             && gzip -t /tmp/v71.html.gz; then
+            gzip -dc /tmp/v71.html.gz > "$SOURCE"
+          else
+            rm -f /tmp/v71.html.gz
+            for part in "${PARTS[@]}"; do
+              base64 --decode "$part"
+            done > /tmp/v71.html.gz
+            gzip -t /tmp/v71.html.gz
+            gzip -dc /tmp/v71.html.gz > "$SOURCE"
+          fi
+
+          echo "10e266aacf6c75bc9bd91cbad800363754c1ee912abe8329b8ff32ceca570c2f  $SOURCE" | sha256sum --check
 
       - name: Séparer mécaniquement la V7.1
         run: python3 tools/split_v71.py
