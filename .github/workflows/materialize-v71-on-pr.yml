@@ -27,9 +27,11 @@ jobs:
             echo '# Inventaire des fragments Base64 V7.1'
             echo
             for file in baseline/exact/v71.html.gz.b64.part*; do
+              size=$(stat -c '%s' "$file")
+              hash=$(sha256sum "$file" | awk '{print $1}')
               echo "## $file"
-              echo "bytes=$(wc -c < \"$file\")"
-              echo "sha256=$(sha256sum \"$file\" | cut -d' ' -f1)"
+              echo "bytes=$size"
+              echo "sha256=$hash"
               printf 'start='; head -c 64 "$file"; echo
               printf 'end='; tail -c 64 "$file"; echo
               echo
@@ -38,5 +40,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$REPORT"
-          git commit -m 'Inventorie les fragments exacts V7.1' || true
+          git commit -m 'Mesure précisément les fragments V7.1' || true
           git push origin HEAD:refactor/v7.1-split-clean
