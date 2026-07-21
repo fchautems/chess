@@ -1,0 +1,82 @@
+name: Matérialiser la V7.1 séparée
+
+on:
+  pull_request:
+    branches:
+      - refactor/v7.1-split-clean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: materialize-v71-clean
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer la branche de travail
+        uses: actions/checkout@v4
+        with:
+          ref: refactor/v7.1-split-clean
+          fetch-depth: 0
+
+      - name: Restaurer la source originale
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p baseline v71-preview/vendor
+          cat baseline/source/v71.html.gz.b64.part* | base64 --decode | gzip -dc > baseline/entraineur_ouvertures_echecs_v7_1.html
+          echo "10e266aacf6c75bc9bd91cbad800363754c1ee912abe8329b8ff32ceca570c2f  baseline/entraineur_ouvertures_echecs_v7_1.html" | sha256sum --check
+
+      - name: Séparer mécaniquement la V7.1
+        run: python3 tools/split_v71.py
+
+      - name: Ajouter chess.js localement
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location \
+            https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js \
+            --output v71-preview/vendor/chess.min.js
+          test -s v71-preview/vendor/chess.min.js
+
+      - name: Contrôler les fichiers générés
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s v71-preview/index.html
+          test -s v71-preview/styles.css
+          test -s v71-preview/app.js
+          test -s v71-preview/vendor/chess.min.js
+          node --check v71-preview/app.js
+          node --check v71-preview/vendor/chess.min.js
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path('validation-report.json').read_text(encoding='utf-8'))
+          assert report['source_sha256'] == '10e266aacf6c75bc9bd91cbad800363754c1ee912abe8329b8ff32ceca570c2f'
+          assert report['baseline_restores_exactly'] is True
+          assert report['css_exact_extraction'] is True
+          assert report['javascript_exact_extraction'] is True
+          assert report['missing_html_ids'] == []
+          assert report['duplicate_html_ids'] == []
+          assert report['duplicate_function_order_preserved'] is True
+          assert report['main_branch_modified'] is False
+          PY
+
+      - name: Enregistrer les résultats sur la branche V7.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add baseline/entraineur_ouvertures_echecs_v7_1.html baseline/SHA256.txt v71-preview validation-report.json VALIDATION.md
+          if git diff --cached --quiet; then
+            echo "Les fichiers sont déjà à jour."
+            exit 0
+          fi
+          git commit -m "Gèle et sépare mécaniquement la V7.1"
+          git push origin HEAD:refactor/v7.1-split-clean
