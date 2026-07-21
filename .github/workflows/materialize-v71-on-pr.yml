@@ -8,114 +8,42 @@ on:
 permissions:
   contents: write
 
-concurrency:
-  group: materialize-v71-clean
-  cancel-in-progress: false
-
 jobs:
-  build:
+  inventory:
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
-      - name: Récupérer la branche de travail
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: refactor/v7.1-split-clean
           fetch-depth: 0
 
-      - name: Diagnostiquer et restaurer la source originale
+      - name: Inventorier les états historiques de la V7.1
         shell: bash
         run: |
-          set +e
-          mkdir -p baseline v71-preview/vendor
-          SOURCE=baseline/entraineur_ouvertures_echecs_v7_1.html
-          PARTS=(baseline/source/v71.html.gz.b64.part*)
-          DIAG=RESTORE_DIAGNOSTIC.txt
-          rm -f "$SOURCE" /tmp/v71.html.gz "$DIAG"
-
+          set -euo pipefail
+          REPORT=HISTORICAL_V71_INVENTORY.txt
           {
-            echo "# Diagnostic restauration V7.1"
-            date -u
+            echo '# Inventaire des états historiques V7.1'
             echo
-            echo "## Fichiers source"
-            ls -la baseline/source
-            echo
-            for part in "${PARTS[@]}"; do
-              echo "### $part"
-              wc -c "$part"
-              printf 'début: '; head -c 16 "$part"; echo
-              printf 'fin: '; tail -c 16 "$part"; echo
+            for commit in \
+              31c292f1bd622fec5f27065bb5afea252b0a6cf9 \
+              78dbb64d5e2b9788c38d418ef1183e433533d95e \
+              fdbb71f694e64727cfe57f4cd7906057118f1f85 \
+              1dfa1a9a55ad8ecab578a22de1796f798931df8a \
+              235c2d620fcd91025505f496dcd20063ba5b0cfe \
+              d424f158a04f464026b9d0efd8fd02bffbd7f7c5 \
+              9dc37e447f7d65f8dc61f7c5b084e5b0f3dd0953 \
+              a432892bb3ddf6c07149679469beca574cf1c526; do
+              echo "## $commit"
+              git show -s --format='%H %s' "$commit"
+              git ls-tree -rl "$commit" | awk '{print $4, $5}' | sort
+              echo
             done
+          } > "$REPORT"
 
-            echo
-            echo "## Méthode 1 : concaténer puis décoder"
-            cat "${PARTS[@]}" | base64 --decode > /tmp/v71.html.gz
-            M1_B64=$?
-            echo "base64_status=$M1_B64"
-            wc -c /tmp/v71.html.gz
-            gzip -t /tmp/v71.html.gz
-            M1_GZIP=$?
-            echo "gzip_status=$M1_GZIP"
-            if [ "$M1_B64" -eq 0 ] && [ "$M1_GZIP" -eq 0 ]; then
-              gzip -dc /tmp/v71.html.gz > "$SOURCE"
-              echo "sha256=$(sha256sum "$SOURCE" | cut -d' ' -f1)"
-            fi
-
-            echo
-            echo "## Méthode 2 : décoder chaque fragment"
-            rm -f /tmp/v71.html.gz
-            for part in "${PARTS[@]}"; do
-              base64 --decode "$part"
-              echo "fragment_status=$? file=$part" >&2
-            done > /tmp/v71.html.gz
-            M2_B64=$?
-            echo "boucle_status=$M2_B64"
-            wc -c /tmp/v71.html.gz
-            gzip -t /tmp/v71.html.gz
-            M2_GZIP=$?
-            echo "gzip_status=$M2_GZIP"
-            if [ "$M2_GZIP" -eq 0 ]; then
-              gzip -dc /tmp/v71.html.gz > "$SOURCE"
-              echo "sha256=$(sha256sum "$SOURCE" | cut -d' ' -f1)"
-            fi
-          } > "$DIAG" 2>&1
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "$DIAG"
-          git commit -m "Enregistre le diagnostic de restauration V7.1" || true
-          git push origin HEAD:refactor/v7.1-split-clean
-          exit 1
-
-      - name: Séparer mécaniquement la V7.1
-        run: python3 tools/split_v71.py
-
-      - name: Ajouter chess.js localement
-        shell: bash
-        run: |
-          set -euo pipefail
-          curl --fail --silent --show-error --location \
-            https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js \
-            --output v71-preview/vendor/chess.min.js
-          test -s v71-preview/vendor/chess.min.js
-
-      - name: Contrôler les fichiers générés
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -s v71-preview/index.html
-          test -s v71-preview/styles.css
-          test -s v71-preview/app.js
-          test -s v71-preview/vendor/chess.min.js
-          node --check v71-preview/app.js
-          node --check v71-preview/vendor/chess.min.js
-
-      - name: Enregistrer les résultats sur la branche V7.1
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add baseline/entraineur_ouvertures_echecs_v7_1.html baseline/SHA256.txt v71-preview validation-report.json VALIDATION.md
-          git commit -m "Gèle et sépare mécaniquement la V7.1"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$REPORT"
+          git commit -m 'Inventorie les fichiers historiques de la V7.1' || true
           git push origin HEAD:refactor/v7.1-split-clean
