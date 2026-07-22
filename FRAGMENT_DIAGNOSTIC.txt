@@ -1,18 +1,3 @@
-variant=abc
-base64_chars=139919
-base64_status=failed
-gzip_status=failed
-decoded_size=32768
-decoded_sha256=7799dcaabe02978169d17dd001dfc7e5aacade4d119a78b441e14f7439f1b626
-base64_error=base64: invalid input 
-gzip_error= gzip: /tmp/v71.html.gz: invalid compressed data--format violated 
-
-variant=eec
-base64_chars=129919
-base64_status=failed
-gzip_status=failed
-decoded_size=32768
-decoded_sha256=7799dcaabe02978169d17dd001dfc7e5aacade4d119a78b441e14f7439f1b626
-base64_error=base64: invalid input 
-gzip_error= gzip: /tmp/v71.html.gz: invalid compressed data--format violated 
-
+variant=abc original_chars=139917
+variant=eec original_chars=129917
+Aucune insertion aux jonctions ne restaure la source exacte.
