@@ -1,0 +1,54 @@
+name: Générer les fichiers JavaScript V7.1
+
+on:
+  pull_request:
+    branches:
+      - v71-clean
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: generate-v71-js
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    if: github.event.pull_request.head.ref == 'v71-js-trigger'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer la branche de travail
+        uses: actions/checkout@v4
+        with:
+          ref: v71-clean
+          fetch-depth: 0
+
+      - name: Restaurer la source V7.1 exacte
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin refactor/v7.1-split-clean
+          git cat-file blob 4a00914d628f2e6348d930a063e3fb4861d56142 > /tmp/v71.html
+          echo "10e266aacf6c75bc9bd91cbad800363754c1ee912abe8329b8ff32ceca570c2f  /tmp/v71.html" | sha256sum --check
+
+      - name: Générer et contrôler les huit fichiers
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/generate_v71_js.py /tmp/v71.html
+          for file in js/*.js; do
+            node --check "$file"
+          done
+
+      - name: Enregistrer le résultat sur v71-clean
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/generate-v71-js.yml tools/generate_v71_js.py
+          rmdir tools 2>/dev/null || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Ajoute les fichiers JavaScript restants de la V7.1"
+          git push origin HEAD:v71-clean
