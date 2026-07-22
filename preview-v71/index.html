@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#262421">
+  <title>Ouvertures — Campagne V7</title>
+  <link rel="stylesheet" href="css/01-base.css">
+  <link rel="stylesheet" href="css/02-home.css">
+  <link rel="stylesheet" href="css/03-board.css">
+  <link rel="stylesheet" href="css/04-training.css">
+  <link rel="stylesheet" href="css/05-modals.css">
+</head>
+<body>
+  <main class="app">
+    <div id="fatalError" class="fatal" role="alert"></div>
+
+    <section id="homeScreen" class="screen active" aria-labelledby="homeTitle">
+      <div class="profile-bar" aria-label="Progression du joueur">
+        <div class="profile-level"><span class="avatar">♞</span><span>Niv. <span id="playerLevel">1</span></span></div>
+        <div class="xp-wrap">
+          <div class="xp-label"><span id="xpLabel">0 XP</span><span id="nextLevelLabel">500 XP</span></div>
+          <div class="xp-track"><div id="xpFill" class="xp-fill"></div></div>
+        </div>
+        <div id="profileStreak" class="profile-streak">🔥 0 jour</div>
+      </div>
+
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">♞</div>
+        <div>
+          <h1 id="homeTitle">Ouvertures</h1>
+          <p>Construis ton répertoire comme une campagne.</p>
+        </div>
+      </div>
+
+      <div class="setup-card">
+        <div class="field">
+          <span class="field-label">Je veux entraîner</span>
+          <div class="segmented" role="group" aria-label="Choix de la couleur">
+            <button id="whiteChoice" class="segment active" type="button" data-color="white">♙ Les Blancs</button>
+            <button id="blackChoice" class="segment" type="button" data-color="black">♟ Les Noirs</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="openingSelect">Ouverture</label>
+          <select id="openingSelect"></select>
+        </div>
+
+        <div class="field level-row">
+          <label class="field-label" for="levelSelect">Niveau d’apprentissage</label>
+          <select id="levelSelect"></select>
+          <div id="levelLockNote" class="level-lock-note"></div>
+        </div>
+
+        <div id="openingPreview" class="opening-preview"></div>
+        <button id="conceptButton" class="concept-home-btn" type="button">📘 Comprendre l’ouverture</button>
+        <button id="startButton" class="primary-btn" type="button">Commencer la session</button>
+        <button id="bossButton" class="boss-btn" type="button" hidden>👑 Affronter le boss de l’Italienne</button>
+      </div>
+
+      <h2 class="campaign-title">Parcours du répertoire</h2>
+      <div id="campaignGrid" class="campaign-grid"></div>
+
+      <div class="home-tip">
+        Les coups ratés sont mémorisés et rendent les branches concernées plus probables.<br>
+        <small>Progression et récompenses enregistrées uniquement sur cet appareil.</small>
+      </div>
+    </section>
+
+    <section id="trainingScreen" class="screen" aria-labelledby="trainingOpeningName">
+      <header class="training-header">
+        <button id="backButton" class="icon-btn" type="button" aria-label="Retour à l'accueil">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <div class="training-title">
+          <h2 id="trainingOpeningName">Ouverture</h2>
+          <p id="trainingVariationName">Variante</p>
+        </div>
+        <div class="header-actions">
+          <span id="bossChip" class="boss-chip" title="Vies restantes">❤️ 3</span>
+          <span id="comboChip" class="combo-chip" title="Série de bons coups">🔥 0</span>
+          <button id="conceptTrainingButton" class="icon-btn concept-icon-btn" type="button" aria-label="Comprendre le plan de l’ouverture" title="Comprendre le plan">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/><path d="M8 7h8M8 11h6"/></svg>
+          </button>
+          <button id="soundButton" class="icon-btn" type="button" aria-label="Couper le son" title="Son activé"></button>
+          <button id="flipButton" class="icon-btn" type="button" aria-label="Retourner momentanément l'échiquier" title="Retourner l'échiquier">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M18.2 9A7 7 0 0 0 6.1 6.1L4 8"/><path d="M5.8 15A7 7 0 0 0 17.9 17.9L20 16"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <div id="historyStrip" class="history-strip" aria-label="Historique des coups"></div>
+
+      <div class="board-wrap">
+        <div id="board" class="board" role="grid" aria-label="Échiquier interactif"></div>
+      </div>
+
+      <div class="progress-area">
+        <div class="progress-meta">
+          <span id="progressLabel">Progression</span>
+          <span id="progressValue">0 / 0</span>
+        </div>
+        <div class="progress-bar" aria-hidden="true">
+          <div id="progressFill" class="progress-fill"></div>
+        </div>
+      </div>
+
+      <div id="statusCard" class="status-card" aria-live="polite">
+        <div id="statusIcon" class="status-icon" aria-hidden="true">♟</div>
+        <div class="status-text">
+          <strong id="statusTitle">À toi de jouer</strong>
+          <span id="statusMessage">Trouve le prochain coup.</span>
+        </div>
+      </div>
+
+      <div class="hint-options">
+        <label class="hint-toggle" for="hideHintCheckbox">
+          <input id="hideHintCheckbox" type="checkbox">
+          <span><strong>Masquer l’indice stratégique</strong><span class="hint-help"><br>Cache l’objectif du coup tant que tu n’as pas demandé d’indice direct.</span></span>
+        </label>
+      </div>
+
+      <div class="nav-row">
+        <button id="prevButton" class="nav-btn" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg> Précédent
+        </button>
+        <button id="nextButton" class="nav-btn" type="button">
+          Suivant <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </div>
+
+      <div class="toolbar">
+        <button id="restartButton" class="toolbar-btn" type="button">
+          <span class="btn-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v6h6"/></svg></span>Recommencer
+        </button>
+        <button id="hintButton" class="toolbar-btn" type="button">
+          <span class="btn-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M8.5 14.5A6 6 0 1 1 15.5 14.5C14.6 15.2 14 16.1 14 17h-4c0-.9-.6-1.8-1.5-2.5Z"/></svg></span>Indice
+        </button>
+        <button id="homeButton" class="toolbar-btn" type="button">
+          <span class="btn-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/></svg></span>Ouvertures
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <div id="resultBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+    <div class="modal">
+      <div id="modalEmoji" class="modal-emoji" aria-hidden="true">🎉</div>
+      <h3 id="resultTitle">Session terminée</h3>
+      <p id="resultSubtitle" class="modal-subtitle"></p>
+      <div class="results-grid">
+        <div class="result-box"><strong id="resultFirstTry">0 / 0</strong><span>du premier essai</span></div>
+        <div class="result-box"><strong id="resultAccuracy">0 %</strong><span>précision</span></div>
+        <div class="result-box"><strong id="resultErrors">0</strong><span>positions fragiles</span></div>
+        <div class="result-box"><strong id="resultHints">0</strong><span>indices</span></div>
+      </div>
+      <div class="session-reward">
+        <strong id="resultXp">+0 XP</strong>
+        <span id="resultProgress">Progression enregistrée.</span>
+      </div>
+      <div id="unlockBanner" class="unlock-banner"></div>
+      <div id="chestArea" class="chest-area">
+        <button id="openChestButton" class="chest-button" type="button"><span class="chest-icon">🎁</span><span id="chestLabel">Ouvrir le coffre</span></button>
+        <div id="rewardReveal" class="reward-reveal"></div>
+      </div>
+      <div class="modal-actions">
+        <button id="resultRevenge" class="secondary-btn revenge-btn" type="button" hidden>🔥 Défi revanche</button>
+        <button id="resultRestart" class="primary-btn" type="button">Rejouer une session</button>
+        <button id="resultHome" class="secondary-btn" type="button">Retour au parcours</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="conceptBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="conceptTitle">
+    <div class="modal concept-modal">
+      <div class="concept-kicker">Comprendre avant de mémoriser</div>
+      <h3 id="conceptTitle">Concept de l’ouverture</h3>
+      <p id="conceptSubtitle" class="modal-subtitle"></p>
+      <div id="conceptBody"></div>
+      <div class="modal-actions">
+        <button id="conceptStartButton" class="primary-btn" type="button">J’ai compris — commencer</button>
+        <button id="conceptCloseButton" class="secondary-btn" type="button">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Seule la bibliothèque de règles est chargée en ligne. Les pièces sont intégrées au fichier. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+  <script src="js/01-data.js"></script>
+  <script src="js/02-state.js"></script>
+  <script src="js/03-board.js"></script>
+  <script src="js/04-training.js"></script>
+  <script src="js/05-campaign.js"></script>
+  <script src="js/06-boss.js"></script>
+  <script src="js/07-ui.js"></script>
+  <script src="js/08-init.js"></script>
+</body>
+</html>
