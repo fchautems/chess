@@ -1,3 +1,0 @@
-variant=abc original_chars=139917
-variant=eec original_chars=129917
-Aucune insertion aux jonctions ne restaure la source exacte.
