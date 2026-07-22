@@ -28,73 +28,69 @@ jobs:
         id: restore
         shell: bash
         run: |
-          set -u
+          set -euo pipefail
           REF=origin/refactor/v7.1-split-clean
-          EXPECTED="10e266aacf6c75bc9bd91cbad800363754c1ee912abe8329b8ff32ceca570c2f"
-          REPORT=/tmp/fragment-report.txt
-          : > "$REPORT"
           git fetch --no-tags origin refactor/v7.1-split-clean
-
-          prefix_parts="
-          baseline/exact/v71.html.gz.b64.part01
-          baseline/exact/v71.html.gz.b64.part02
-          baseline/exact/v71.html.gz.b64.part03
-          baseline/exact/v71.html.gz.b64.part04
-          baseline/exact/v71.html.gz.b64.part05a
-          baseline/exact/v71.html.gz.b64.part05b
-          baseline/exact/v71.html.gz.b64.part05c
-          "
-
-          success=0
-          for variant in abc eec; do
-            : > /tmp/v71.b64
-            for part in $prefix_parts; do
-              git show "$REF:$part" >> /tmp/v71.b64
-            done
-            if [ "$variant" = abc ]; then
-              tail_parts="baseline/exact/v71.html.gz.b64.part06a baseline/exact/v71.html.gz.b64.part06b baseline/exact/v71.html.gz.b64.part06c"
-            else
-              tail_parts="baseline/exact/v71.html.gz.b64.part06e1 baseline/exact/v71.html.gz.b64.part06e2 baseline/exact/v71.html.gz.b64.part06c"
-            fi
-            for part in $tail_parts; do
-              git show "$REF:$part" >> /tmp/v71.b64
-            done
-
-            tr -d '\r\n' < /tmp/v71.b64 > /tmp/v71.clean.b64
-            chars=$(wc -c < /tmp/v71.clean.b64)
-            if base64 --decode /tmp/v71.clean.b64 > /tmp/v71.html.gz 2>/tmp/base64.err; then
-              b64_status=ok
-            else
-              b64_status=failed
-            fi
-            if gzip -dc /tmp/v71.html.gz > /tmp/candidate.html 2>/tmp/gzip.err; then
-              gzip_status=ok
-            else
-              gzip_status=failed
-            fi
-            size=$(wc -c < /tmp/candidate.html 2>/dev/null || echo 0)
-            sha=$(sha256sum /tmp/candidate.html 2>/dev/null | awk '{print $1}')
-            {
-              echo "variant=$variant"
-              echo "base64_chars=$chars"
-              echo "base64_status=$b64_status"
-              echo "gzip_status=$gzip_status"
-              echo "decoded_size=$size"
-              echo "decoded_sha256=$sha"
-              echo "base64_error=$(tr '\n' ' ' < /tmp/base64.err)"
-              echo "gzip_error=$(tr '\n' ' ' < /tmp/gzip.err)"
-              echo
-            } >> "$REPORT"
-
-            if [ "$sha" = "$EXPECTED" ]; then
-              cp /tmp/candidate.html /tmp/v71.html
-              success=1
-              break
-            fi
+          rm -rf /tmp/v71-parts
+          mkdir -p /tmp/v71-parts
+          for name in part01 part02 part03 part04 part05a part05b part05c part06a part06b part06c part06e1 part06e2; do
+            git show "$REF:baseline/exact/v71.html.gz.b64.$name" > "/tmp/v71-parts/$name"
           done
 
-          cat "$REPORT"
-          [ "$success" -eq 1 ]
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64
+          import gzip
+          import hashlib
+
+          expected = "10e266aacf6c75bc9bd91cbad800363754c1ee912abe8329b8ff32ceca570c2f"
+          alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
+          root = Path('/tmp/v71-parts')
+          common = ['part01','part02','part03','part04','part05a','part05b','part05c']
+          variants = {
+              'abc': common + ['part06a','part06b','part06c'],
+              'eec': common + ['part06e1','part06e2','part06c'],
+          }
+          report = []
+          found = False
+
+          def load(name):
+              return ''.join(root.joinpath(name).read_text(encoding='ascii').split())
+
+          for variant, names in variants.items():
+              parts = [load(name) for name in names]
+              report.append(f"variant={variant} original_chars={sum(map(len, parts))}")
+              for boundary in range(len(parts) + 1):
+                  left = ''.join(parts[:boundary])
+                  right = ''.join(parts[boundary:])
+                  for character in alphabet:
+                      encoded = left + character + right
+                      try:
+                          compressed = base64.b64decode(encoded, validate=True)
+                          source = gzip.decompress(compressed)
+                      except Exception:
+                          continue
+                      actual = hashlib.sha256(source).hexdigest()
+                      if actual == expected:
+                          Path('/tmp/v71.html').write_bytes(source)
+                          report.append(
+                              f"FOUND variant={variant} boundary={boundary} "
+                              f"character={character!r} size={len(source)} sha256={actual}"
+                          )
+                          found = True
+                          break
+                  if found:
+                      break
+              if found:
+                  break
+
+          if not found:
+              report.append('Aucune insertion aux jonctions ne restaure la source exacte.')
+          Path('/tmp/fragment-report.txt').write_text('\n'.join(report) + '\n', encoding='utf-8')
+          print('\n'.join(report))
+          if not found:
+              raise SystemExit(1)
+          PY
 
       - name: Générer et contrôler les huit fichiers
         if: steps.restore.outcome == 'success'
@@ -126,5 +122,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add FRAGMENT_DIAGNOSTIC.txt
-          git commit -m "Enregistre le diagnostic des fragments V7.1" || true
+          git commit -m "Enregistre le diagnostic des jonctions V7.1" || true
           git push origin HEAD:v71-clean
