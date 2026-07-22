@@ -24,13 +24,40 @@ jobs:
           ref: v71-clean
           fetch-depth: 0
 
-      - name: Restaurer la source V7.1 exacte
+      - name: Retrouver la source V7.1 exacte dans l’historique
         shell: bash
         run: |
           set -euo pipefail
+          EXPECTED="10e266aacf6c75bc9bd91cbad800363754c1ee912abe8329b8ff32ceca570c2f"
           git fetch --no-tags origin refactor/v7.1-split-clean
-          git cat-file blob 4a00914d628f2e6348d930a063e3fb4861d56142 > /tmp/v71.html
-          echo "10e266aacf6c75bc9bd91cbad800363754c1ee912abe8329b8ff32ceca570c2f  /tmp/v71.html" | sha256sum --check
+          git show origin/refactor/v7.1-split-clean:RECOVERABLE_V71_COMMITS.txt > /tmp/recoverable.txt
+
+          {
+            echo 31c292f1bd622fec5f27065bb5afea252b0a6cf9d
+            grep '^## [0-9a-f]\{40\}$' /tmp/recoverable.txt | awk '{print $2}'
+          } | awk 'NF && !seen[$0]++' > /tmp/commit-shas.txt
+
+          : > /tmp/v71.html
+          while IFS= read -r sha; do
+            [ -n "$sha" ] || continue
+            git fetch --quiet origin "$sha" 2>/dev/null || true
+            git ls-tree -rl "$sha" 2>/dev/null \
+              | awk '$4 == 480009 {print $3 "\t" $5}' > /tmp/candidates.txt || true
+
+            while IFS=$'\t' read -r blob path; do
+              [ -n "$blob" ] || continue
+              git cat-file blob "$blob" > /tmp/candidate.html 2>/dev/null || continue
+              actual=$(sha256sum /tmp/candidate.html | awk '{print $1}')
+              if [ "$actual" = "$EXPECTED" ]; then
+                cp /tmp/candidate.html /tmp/v71.html
+                echo "Source exacte retrouvée : commit=$sha blob=$blob path=$path"
+                break 2
+              fi
+            done < /tmp/candidates.txt
+          done < /tmp/commit-shas.txt
+
+          test -s /tmp/v71.html
+          echo "$EXPECTED  /tmp/v71.html" | sha256sum --check
 
       - name: Générer et contrôler les huit fichiers
         shell: bash
