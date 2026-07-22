@@ -1,0 +1,55 @@
+name: Finaliser les JavaScript V7.1
+
+on:
+  push:
+    branches: [v71-clean]
+    paths: [v71-js-rest.tar.gz]
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v71-clean
+          fetch-depth: 0
+
+      - name: Vérifier et extraire l’archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "4a94c653b7ddd5fd1f27e125c3b7441998bc43df0bbe221e57bae0064ad5d0e9  v71-js-rest.tar.gz" | sha256sum --check
+          mkdir -p /tmp/v71-js-rest js
+          tar -xzf v71-js-rest.tar.gz -C /tmp/v71-js-rest
+          mv /tmp/v71-js-rest/*.js js/
+
+      - name: Contrôler les fichiers
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "438704f19a44eb50152e313e741202a83beb2eb2cf152e1836de623a682dc608  js/02-state.js" | sha256sum --check
+          echo "c81540e79997484b6c3e9146f43a73c1bf35c6bb2d5e4f499d3d8353ae3a55de  js/03-board.js" | sha256sum --check
+          echo "5b78d606ebd57ae123c8856608bdbd3bcda31d5acf07d9c19b9e64edb212bb78  js/04-training.js" | sha256sum --check
+          echo "dc8b65f603275676b2b1115be6c982a09b41c415310c6f908d60356786f52dc2  js/05-campaign.js" | sha256sum --check
+          echo "654a24627e450ae5e0b8a0654a123445ffab22e0e8c99c53e762ba6874525f4e  js/06-boss.js" | sha256sum --check
+          echo "2679760e0f7fd7ddf67a59e35d23ba0a26df35f34ab053670befaa7f9ac01eda  js/07-ui.js" | sha256sum --check
+          echo "ae8028d9a6f4790252e046c82b07ac87b01ea17a3c1565b6fd438d45b417727a  js/08-init.js" | sha256sum --check
+          for file in js/*.js; do node --check "$file"; done
+          cat js/01-data.js js/02-state.js js/03-board.js js/04-training.js js/05-campaign.js js/06-boss.js js/07-ui.js js/08-init.js > /tmp/v71-all.js
+          test "$(wc -c < /tmp/v71-all.js)" = "444275"
+          echo "da80c877047ea757cfd45311a4f5b109d7f07713b9f1b04482a2658aba011fc8  /tmp/v71-all.js" | sha256sum --check
+          node --check /tmp/v71-all.js
+
+      - name: Enregistrer la branche propre
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f v71-js-rest.tar.gz .github/workflows/finalize-v71-js.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Ajoute les fichiers JavaScript restants de la V7.1"
+          git push origin HEAD:v71-clean
