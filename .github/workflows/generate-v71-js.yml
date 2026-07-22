@@ -24,39 +24,30 @@ jobs:
           ref: v71-clean
           fetch-depth: 0
 
-      - name: Retrouver la source V7.1 exacte dans l’historique
+      - name: Restaurer la source V7.1 depuis ses fragments exacts
         shell: bash
         run: |
           set -euo pipefail
+          REF=origin/refactor/v7.1-split-clean
           EXPECTED="10e266aacf6c75bc9bd91cbad800363754c1ee912abe8329b8ff32ceca570c2f"
           git fetch --no-tags origin refactor/v7.1-split-clean
-          git show origin/refactor/v7.1-split-clean:RECOVERABLE_V71_COMMITS.txt > /tmp/recoverable.txt
-
-          {
-            echo 31c292f1bd622fec5f27065bb5afea252b0a6cf9d
-            grep '^## [0-9a-f]\{40\}$' /tmp/recoverable.txt | awk '{print $2}'
-          } | awk 'NF && !seen[$0]++' > /tmp/commit-shas.txt
-
-          : > /tmp/v71.html
-          while IFS= read -r sha; do
-            [ -n "$sha" ] || continue
-            git fetch --quiet origin "$sha" 2>/dev/null || true
-            git ls-tree -rl "$sha" 2>/dev/null \
-              | awk '$4 == 480009 {print $3 "\t" $5}' > /tmp/candidates.txt || true
-
-            while IFS=$'\t' read -r blob path; do
-              [ -n "$blob" ] || continue
-              git cat-file blob "$blob" > /tmp/candidate.html 2>/dev/null || continue
-              actual=$(sha256sum /tmp/candidate.html | awk '{print $1}')
-              if [ "$actual" = "$EXPECTED" ]; then
-                cp /tmp/candidate.html /tmp/v71.html
-                echo "Source exacte retrouvée : commit=$sha blob=$blob path=$path"
-                break 2
-              fi
-            done < /tmp/candidates.txt
-          done < /tmp/commit-shas.txt
-
-          test -s /tmp/v71.html
+          : > /tmp/v71.b64
+          for part in \
+            baseline/exact/v71.html.gz.b64.part01 \
+            baseline/exact/v71.html.gz.b64.part02 \
+            baseline/exact/v71.html.gz.b64.part03 \
+            baseline/exact/v71.html.gz.b64.part04 \
+            baseline/exact/v71.html.gz.b64.part05a \
+            baseline/exact/v71.html.gz.b64.part05b \
+            baseline/exact/v71.html.gz.b64.part05c \
+            baseline/exact/v71.html.gz.b64.part06a \
+            baseline/exact/v71.html.gz.b64.part06b \
+            baseline/exact/v71.html.gz.b64.part06c
+          do
+            git show "$REF:$part" >> /tmp/v71.b64
+          done
+          tr -d '\r\n' < /tmp/v71.b64 | base64 --decode > /tmp/v71.html.gz
+          gzip -dc /tmp/v71.html.gz > /tmp/v71.html
           echo "$EXPECTED  /tmp/v71.html" | sha256sum --check
 
       - name: Générer et contrôler les huit fichiers
