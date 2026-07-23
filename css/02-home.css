@@ -208,3 +208,12 @@
       border: clamp(5px, 1.4vw, 10px) solid rgba(45, 40, 35, .24);
       pointer-events: none;
     }
+
+    /* Correctif mobile : le plateau suit l’espace réellement disponible. */
+    @supports (width: 1cqh) {
+      .board-wrap { container-type: size; }
+      .board {
+        width: min(100cqw, 100cqh);
+        max-width: none;
+      }
+    }
