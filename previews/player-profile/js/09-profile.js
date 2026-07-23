@@ -139,25 +139,26 @@
         <div class="profile-modal-header">
           <div>
             <h2 id="profileModalTitle">Profil joueur</h2>
-            <p>Ton nom et ta progression restent sur cet appareil tant que tu ne les exportes pas.</p>
+            <p>Ton nom et ta progression sont enregistrés automatiquement dans ce navigateur.</p>
           </div>
           <button id="profileCloseButton" class="profile-close-button" type="button" aria-label="Fermer">×</button>
         </div>
 
         <label class="profile-field-label" for="profileNameInput">Nom du joueur</label>
         <input id="profileNameInput" class="profile-name-input" type="text" maxlength="${MAX_NAME_LENGTH}" autocomplete="nickname">
-        <button id="profileSaveButton" class="profile-save-button" type="button">Enregistrer le profil</button>
+        <button id="profileSaveButton" class="profile-save-button" type="button">Enregistrer le nom</button>
 
         <div class="profile-storage-card">
           <h3>Sauvegarde et transfert</h3>
-          <p>L’export contient le profil, les XP, les niveaux, les récompenses et les statistiques enregistrées par le jeu.</p>
+          <p><strong>Automatique :</strong> le jeu conserve ici ton profil, tes XP, tes niveaux, tes récompenses et tes statistiques.</p>
+          <p><strong>Copie JSON :</strong> l’export crée une photographie manuelle pour transférer ou récupérer ton joueur. Ce fichier ne se met pas à jour tout seul.</p>
           <div class="profile-action-grid">
-            <button id="profileExportButton" class="profile-action-button" type="button">⬇️ Exporter</button>
-            <label class="profile-import-label" for="profileImportInput">⬆️ Importer
+            <button id="profileExportButton" class="profile-action-button" type="button">⬇️ Exporter une sauvegarde</button>
+            <label class="profile-import-label" for="profileImportInput">⬆️ Importer une sauvegarde
               <input id="profileImportInput" type="file" accept="application/json,.json">
             </label>
           </div>
-          <button id="profileResetButton" class="profile-reset-button" type="button">Réinitialiser ce joueur</button>
+          <button id="profileResetButton" class="profile-reset-button" type="button">Effacer le profil et toute la progression</button>
           <div id="profileStatus" class="profile-status" aria-live="polite"></div>
         </div>
       </section>`;
@@ -228,7 +229,7 @@
     saveButton.addEventListener("click", () => {
       profile = saveProfile({ ...profile, name: input.value });
       renderProfile();
-      setStatus("Profil enregistré sur cet appareil.", "success");
+      setStatus("Nom enregistré automatiquement sur cet appareil.", "success");
     });
 
     input.addEventListener("keydown", (event) => {
@@ -239,7 +240,7 @@
       profile = saveProfile({ ...profile, name: input.value });
       renderProfile();
       downloadBackup(profile);
-      setStatus("Sauvegarde exportée. Conserve le fichier dans un endroit sûr.", "success");
+      setStatus("Copie de sauvegarde exportée. Elle correspond à la progression actuelle.", "success");
     });
 
     importInput.addEventListener("change", async () => {
@@ -250,7 +251,7 @@
       try {
         const backup = validateBackup(JSON.parse(await file.text()));
         const importedName = normalizeProfile(backup.profile).name;
-        const confirmed = window.confirm(`Importer la sauvegarde de « ${importedName} » ? La progression actuelle sera remplacée.`);
+        const confirmed = window.confirm(`Importer la sauvegarde de « ${importedName} » ? La progression actuellement enregistrée dans ce navigateur sera remplacée.`);
         if (!confirmed) return;
         restoreBackup(backup);
         setStatus("Sauvegarde importée. Rechargement…", "success");
@@ -261,7 +262,7 @@
     });
 
     resetButton.addEventListener("click", () => {
-      const confirmed = window.confirm("Réinitialiser ce joueur et supprimer toute sa progression sur cet appareil ?");
+      const confirmed = window.confirm("Effacer définitivement le profil, les XP, les niveaux, les récompenses, les statistiques et toute la progression enregistrés dans ce navigateur ? Pense à exporter une sauvegarde avant si tu souhaites les conserver.");
       if (!confirmed) return;
       clearApplicationStorage();
       window.location.reload();
