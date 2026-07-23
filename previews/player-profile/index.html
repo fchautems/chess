@@ -14,11 +14,12 @@
         return response.text();
       })
       .then((html) => {
+        const profileScript = '  <script src="js/09-profile.js"></' + 'script>\n';
         html = html
           .replaceAll('href="css/', 'href="../../css/')
           .replaceAll('src="js/', 'src="../../js/')
           .replace('</head>', '  <link rel="stylesheet" href="css/06-profile.css">\n</head>')
-          .replace('</body>', '  <script src="js/09-profile.js"><\\/script>\n</body>');
+          .replace('</body>', profileScript + '</body>');
         document.open();
         document.write(html);
         document.close();
