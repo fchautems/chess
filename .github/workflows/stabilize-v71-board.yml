@@ -1,9 +1,8 @@
 name: Stabiliser le plateau V7.1
 
 on:
-  push:
-    branches: [main]
-    paths: [.v71-board-fix-trigger]
+  pull_request:
+    types: [opened, synchronize]
 
 permissions:
   contents: write
