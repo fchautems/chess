@@ -1,24 +1,54 @@
-# Chess
+# Chess Openings Trainer
 
-Adaptive, gamified chess-opening trainer.
+Entraîneur progressif d’ouvertures d’échecs. La version actuelle est la
+**v0.1 — Clean foundation**, limitée volontairement au premier tronc italien
+`e4 …e5 Nf3 …Nc6 Bc4`.
 
-## Current direction
+## Lancer l’application sous Windows
 
-The project is being rebooted from scratch around progressive opening-tree learning, adaptive branch selection, mastery tracking, lives, gold, variable-quality hints, sound and unlockable visual themes.
+Double-cliquer simplement sur :
 
-The first opening used to validate the new design will be the **Italian Game**. Development is desktop-browser first, with a portable core intended for a later mobile version.
+```text
+Lancer Chess.bat
+```
 
-➡️ **Product reference:** [Reboot specification](docs/SPEC_REBOOT.md)
+Le lanceur utilise Python, démarre un petit serveur uniquement sur la machine
+locale et ouvre automatiquement l’application dans le navigateur. Node.js et
+npm ne sont pas nécessaires pour jouer.
 
-The previous V7/V7.1 implementation remains in the repository as historical reference, but is no longer the architecture to extend.
+La fenêtre du lanceur doit rester ouverte pendant l’utilisation. La fermer
+arrête le serveur local.
 
-## Reboot application
+## Développement
 
-The clean React/TypeScript implementation lives in [`reboot/`](reboot/). The
-legacy files at the repository root remain untouched as historical reference.
+Les sources React/TypeScript se trouvent directement à la racine :
 
 ```bash
-cd reboot
 npm install
 npm run dev
 ```
+
+Contrôles disponibles :
+
+```bash
+npm test
+npm run typecheck
+npm run lint
+npm run build
+```
+
+Architecture :
+
+- `src/domain/` : logique TypeScript pure, sans dépendance React ;
+- `src/application/` : contrôleur et modèle de vue ;
+- `src/data/` : curriculum statique ;
+- `src/ui/` : interface React et adaptateur du plateau ;
+- `dist/` : version compilée utilisée par le lanceur Windows.
+
+L’ancienne V7/V7.1 est conservée intégralement sur la branche
+[`legacy/v7-v7.1-before-reboot`](https://github.com/fchautems/chess/tree/legacy/v7-v7.1-before-reboot).
+
+Références :
+
+- [Spécification produit](docs/SPEC_REBOOT.md)
+- [Plan d’implémentation](docs/IMPLEMENTATION_PLAN.md)
