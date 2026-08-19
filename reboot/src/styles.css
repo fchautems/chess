@@ -1,0 +1,273 @@
+:root {
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  color: #251d18;
+  background: #efe9df;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at 16% 12%, rgba(255, 255, 255, 0.9), transparent 28rem),
+    linear-gradient(145deg, #f5f0e8 0%, #e6ddd1 100%);
+}
+
+button {
+  font: inherit;
+}
+
+.app-shell {
+  width: min(1180px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 32px 0 56px;
+}
+
+.topbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  margin-bottom: 26px;
+}
+
+.eyebrow {
+  margin: 0 0 5px;
+  color: #876143;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2rem, 4vw, 3.3rem);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+}
+
+.version-badge {
+  padding: 9px 13px;
+  border: 1px solid rgba(76, 54, 39, 0.15);
+  border-radius: 999px;
+  color: #6d503c;
+  background: rgba(255, 255, 255, 0.55);
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.training-layout {
+  display: grid;
+  grid-template-columns: minmax(460px, 720px) minmax(290px, 1fr);
+  gap: 34px;
+  align-items: center;
+}
+
+.board-shell {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid rgba(65, 44, 30, 0.14);
+  border-radius: 25px;
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.coach-card {
+  padding: clamp(24px, 4vw, 38px);
+  border: 1px solid rgba(65, 44, 30, 0.12);
+  border-radius: 26px;
+  background: rgba(255, 252, 247, 0.84);
+  box-shadow: 0 24px 60px rgba(62, 43, 29, 0.1);
+  backdrop-filter: blur(18px);
+}
+
+.stage-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  color: #987257;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.coach-card h2 {
+  margin-bottom: 16px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+.progress-track {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+  margin-bottom: 30px;
+}
+
+.progress-track span {
+  height: 6px;
+  border-radius: 999px;
+  background: #ded5ca;
+  transition: background 180ms ease;
+}
+
+.progress-track span.done {
+  background: #54735a;
+}
+
+.coach-message {
+  min-height: 130px;
+  padding: 20px;
+  border-left: 4px solid #9d7254;
+  border-radius: 4px 16px 16px 4px;
+  background: #f3eadf;
+}
+
+.coach-label {
+  display: block;
+  margin-bottom: 9px;
+  color: #896247;
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.coach-message p {
+  margin-bottom: 0;
+  font-size: 1.05rem;
+  font-weight: 650;
+  line-height: 1.55;
+}
+
+.feedback {
+  margin: 14px 0 0;
+  padding: 11px 13px;
+  border-radius: 10px;
+  color: #823d34;
+  background: #f7dfd9;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.move-history {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 22px 0;
+}
+
+.move-history span {
+  color: #9c816e;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.move-history strong {
+  min-height: 24px;
+  font-size: 0.95rem;
+}
+
+.reset-button {
+  width: 100%;
+  padding: 13px 17px;
+  border: 0;
+  border-radius: 12px;
+  color: #fffaf4;
+  background: #3f5d46;
+  box-shadow: 0 10px 24px rgba(63, 93, 70, 0.2);
+  font-weight: 780;
+  cursor: pointer;
+  transition:
+    transform 150ms ease,
+    background 150ms ease;
+}
+
+.reset-button:hover {
+  background: #334f3a;
+  transform: translateY(-1px);
+}
+
+.reset-button:focus-visible {
+  outline: 3px solid rgba(63, 93, 70, 0.28);
+  outline-offset: 3px;
+}
+
+.scope-note {
+  margin: 16px 2px 0;
+  color: #8c796c;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 900px) {
+  .training-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .board-shell {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 560px) {
+  .app-shell {
+    width: min(100% - 24px, 1180px);
+    padding-top: 18px;
+  }
+
+  .topbar {
+    align-items: start;
+    gap: 14px;
+  }
+
+  .version-badge {
+    margin-top: 4px;
+    font-size: 0.68rem;
+  }
+
+  .training-layout {
+    gap: 20px;
+  }
+
+  .board-shell {
+    padding: 6px;
+    border-radius: 21px;
+  }
+
+  .coach-card {
+    padding: 22px;
+    border-radius: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
