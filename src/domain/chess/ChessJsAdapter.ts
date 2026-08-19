@@ -35,6 +35,12 @@ export class ChessJsAdapter implements ChessRules {
     return this.game.turn() === 'w' ? 'white' : 'black'
   }
 
+  legalDestinations(from: ChessMoveInput['from']): readonly ChessMoveInput['to'][] {
+    return this.game
+      .moves({ square: from, verbose: true })
+      .map((move) => move.to)
+  }
+
   move(move: ChessMoveInput): AppliedChessMove | null {
     try {
       const applied = this.game.move(move)

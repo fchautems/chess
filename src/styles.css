@@ -61,7 +61,20 @@ h1 {
   letter-spacing: -0.04em;
 }
 
-.version-badge {
+.header-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+
+.header-status span {
+  color: #8b735f;
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+
+.header-status strong {
   padding: 9px 13px;
   border: 1px solid rgba(76, 54, 39, 0.15);
   border-radius: 999px;
@@ -75,7 +88,7 @@ h1 {
   display: grid;
   grid-template-columns: minmax(460px, 720px) minmax(290px, 1fr);
   gap: 34px;
-  align-items: center;
+  align-items: start;
 }
 
 .board-shell {
@@ -88,6 +101,9 @@ h1 {
 }
 
 .coach-card {
+  display: flex;
+  min-height: 520px;
+  flex-direction: column;
   padding: clamp(24px, 4vw, 38px);
   border: 1px solid rgba(65, 44, 30, 0.12);
   border-radius: 26px;
@@ -157,6 +173,63 @@ h1 {
   line-height: 1.55;
 }
 
+.result-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-height: 250px;
+  padding: 22px;
+  border: 1px solid rgba(63, 93, 70, 0.14);
+  border-radius: 18px;
+  background: linear-gradient(145deg, #f0eadf, #f8f4ed);
+}
+
+.result-summary p {
+  margin-bottom: 0;
+  font-size: 1rem;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+.concept-box {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-left: 13px;
+  border-left: 3px solid #54735a;
+}
+
+.concept-box span {
+  color: #947b68;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.concept-box strong {
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.sequence-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.sequence-chips span {
+  min-width: 42px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  color: #3f5d46;
+  background: rgba(84, 115, 90, 0.13);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-align: center;
+}
+
 .feedback {
   margin: 14px 0 0;
   padding: 11px 13px;
@@ -187,8 +260,9 @@ h1 {
   font-size: 0.95rem;
 }
 
-.reset-button {
+.primary-button {
   width: 100%;
+  margin-top: auto;
   padding: 13px 17px;
   border: 0;
   border-radius: 12px;
@@ -202,21 +276,39 @@ h1 {
     background 150ms ease;
 }
 
-.reset-button:hover {
+.primary-button:hover {
   background: #334f3a;
   transform: translateY(-1px);
 }
 
-.reset-button:focus-visible {
+.primary-button:focus-visible {
   outline: 3px solid rgba(63, 93, 70, 0.28);
   outline-offset: 3px;
 }
 
-.scope-note {
-  margin: 16px 2px 0;
+.interaction-note {
+  margin: 14px 2px 0;
   color: #8c796c;
   font-size: 0.75rem;
   line-height: 1.5;
+  text-align: center;
+}
+
+.text-button {
+  align-self: center;
+  margin-top: 8px;
+  padding: 5px;
+  border: 0;
+  color: #8c796c;
+  background: transparent;
+  font-size: 0.72rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.text-button:hover {
+  color: #5f4635;
 }
 
 @media (max-width: 900px) {
@@ -241,9 +333,13 @@ h1 {
     gap: 14px;
   }
 
-  .version-badge {
+  .header-status strong {
     margin-top: 4px;
     font-size: 0.68rem;
+  }
+
+  .header-status span {
+    display: none;
   }
 
   .training-layout {
@@ -256,6 +352,7 @@ h1 {
   }
 
   .coach-card {
+    min-height: auto;
     padding: 22px;
     border-radius: 20px;
   }

@@ -1,16 +1,22 @@
 import { describe, expect, it } from 'vitest'
 
 import { ChessJsAdapter } from '../chess/ChessJsAdapter'
-import { italianOpeningGraph } from '../../data/openings/italian/stage0'
+import {
+  italianCurriculum,
+  italianOpeningGraph,
+} from '../../data/openings/italian/curriculum'
 
-describe('Italian Stage 0 graph', () => {
-  it('contains the three learner decisions and their scripted replies', () => {
+describe('Italian v0.2 graph', () => {
+  it('contains both stages and six learner decisions', () => {
     const nodes = italianOpeningGraph.allNodes()
 
-    expect(nodes).toHaveLength(6)
-    expect(nodes.filter((node) => node.type === 'learner-decision')).toHaveLength(3)
-    expect(nodes.filter((node) => node.type === 'opponent-branch')).toHaveLength(2)
+    expect(nodes).toHaveLength(12)
+    expect(nodes.filter((node) => node.type === 'learner-decision')).toHaveLength(6)
+    expect(nodes.filter((node) => node.type === 'opponent-branch')).toHaveLength(5)
     expect(nodes.filter((node) => node.type === 'completion')).toHaveLength(1)
+    expect(italianCurriculum.lessons).toHaveLength(6)
+    expect(italianOpeningGraph.getStage('italian-stage-0').index).toBe(0)
+    expect(italianOpeningGraph.getStage('italian-stage-1').index).toBe(1)
   })
 
   it('connects every authored move to the expected legal position', () => {

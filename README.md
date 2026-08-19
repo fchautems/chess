@@ -1,8 +1,14 @@
 # Chess Openings Trainer
 
 Entraîneur progressif d’ouvertures d’échecs. La version actuelle est la
-**v0.1 — Clean foundation**, limitée volontairement au premier tronc italien
-`e4 …e5 Nf3 …Nc6 Bc4`.
+**v0.2 — Teaching vertical slice**. Elle enseigne progressivement les six
+premières décisions de la structure italienne calme : `e4`, `Nf3`, `Bc4`,
+`d3`, `O-O` et `c3`.
+
+Chaque concept est d’abord découvert, puis doit être reproduit depuis la
+position initiale. La progression est conservée automatiquement dans le
+navigateur. Le plateau accepte le glisser-déposer et le déplacement par deux
+clics, avec surlignage de la sélection, des destinations et du dernier coup.
 
 ## Lancer l’application sous Windows
 

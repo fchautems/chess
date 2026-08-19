@@ -24,6 +24,7 @@ interface OpeningNodeBase {
   type: OpeningNodeType
   theoreticalImportance: number
   prompt: string
+  recallPrompt: string
   errorExplanation: string
   hints: HintPool
   tags: readonly OpeningConcept[]

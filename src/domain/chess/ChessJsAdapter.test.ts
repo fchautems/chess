@@ -23,6 +23,13 @@ describe('ChessJsAdapter', () => {
     expect(rules.fen()).toBe(initialFen)
   })
 
+  it('lists legal destinations for click-to-move interaction', () => {
+    const rules = new ChessJsAdapter()
+
+    expect(rules.legalDestinations('e2')).toEqual(['e3', 'e4'])
+    expect(rules.legalDestinations('e4')).toEqual([])
+  })
+
   it('loads and resets positions through the adapter boundary', () => {
     const rules = new ChessJsAdapter()
 

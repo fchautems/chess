@@ -18,6 +18,7 @@ export interface ChessRules {
   fen(): string
   positionKey(): string
   turn(): 'white' | 'black'
+  legalDestinations(from: ChessSquare): readonly ChessSquare[]
   move(move: ChessMoveInput): AppliedChessMove | null
   load(fen: string): void
   reset(): void
