@@ -1,21 +1,29 @@
 # Chess Openings Trainer
 
 Entraîneur progressif d’ouvertures d’échecs. La version actuelle est la
-**v0.3 — Adaptive trainer**. Elle enseigne progressivement les six
-premières décisions de la structure italienne calme : `e4`, `Nf3`, `Bc4`,
-`d3`, `O-O` et `c3`.
+**v0.4 — Runs & économie**. Elle enseigne d’abord les six fondations de la
+structure italienne calme, puis propose des runs de onze décisions qui vont
+jusqu’à `Re1`, `Bb3` et la manœuvre `Nbd2–f1–g3`.
 
 Le joueur continue tant qu’il reconnaît les positions. Il ne recommence plus
 après chaque coup : chaque bloc est découvert sans interruption, puis reproduit
 une seule fois sans aide automatique. Après le parcours initial, les réponses
 `...Bc5` et `...Nf6` varient selon un Session Director déterministe qui favorise
-les positions faibles, la consolidation et une part de surprise.
+les positions faibles, la consolidation et une part de surprise. Une seconde
+bifurcation varie aussi l’ordre de `...O-O` et `...a6` avant de rejoindre la
+même position.
 
-La maîtrise et la prochaine révision sont enregistrées par position. Les
-indices restent masqués jusqu’à une demande explicite. La progression et la
-session en cours sont conservées automatiquement dans le navigateur. Le plateau
-accepte le glisser-déposer et le déplacement par deux clics, avec surlignage de
-la sélection, des destinations et du dernier coup.
+Chaque run commence avec trois vies. Une erreur ne coûte qu’une vie sur une
+position, puis le joueur peut récupérer sans être puni plusieurs fois au même
+endroit. Les décisions propres construisent un combo et rapportent de l’or ;
+les indices coûtent 5 pièces, ont une qualité variable et deviennent en moyenne
+plus précis quand on en rachète sur la même position.
+
+La maîtrise et la prochaine révision sont enregistrées par position. La
+progression, l’or, les records et la session en cours sont conservés
+automatiquement dans le navigateur. Le plateau accepte le glisser-déposer et le
+déplacement par deux clics, avec surlignage de la sélection, des destinations
+et du dernier coup.
 
 ## Lancer l’application sous Windows
 

@@ -1,6 +1,10 @@
 import type { ChessSquare } from '../domain/chess/ChessRules'
 import type { SessionStrategy } from '../domain/session/SessionDirector'
-import type { PersistedTrainingPhase } from './progress/ProgressRepository'
+import type { HintQuality } from '../domain/opening/OpeningNode'
+import type {
+  PersistedTrainingPhase,
+  RunSummary,
+} from './progress/ProgressRepository'
 
 export type TrainingPhase = PersistedTrainingPhase
 
@@ -31,7 +35,10 @@ export interface GameViewModel {
   prompt: string
   feedback: string | null
   hint: string | null
+  hintQuality: HintQuality | null
+  hintCost: number
   canRequestHint: boolean
+  hintUnavailableReason: string | null
   moveHistory: readonly string[]
   lastMove: BoardMoveView | null
   learnerMovesCompleted: number
@@ -45,7 +52,15 @@ export interface GameViewModel {
   currentNodeMastery: number
   runsCompleted: number
   deepestRun: number
+  goldBalance: number
+  lives: number | null
+  streak: number
+  bestStreak: number
+  runGoldEarned: number
+  runGoldSpent: number
+  eventMessage: string | null
   lastBranchStrategy: SessionStrategy | null
+  lastRun: RunSummary | null
   result: TrainingResultView | null
 }
 
@@ -54,6 +69,7 @@ export type MoveResultKind =
   | 'checkpoint-ready'
   | 'stage-complete'
   | 'run-complete'
+  | 'run-over'
   | 'illegal'
   | 'outside-training-line'
   | 'not-awaiting-move'

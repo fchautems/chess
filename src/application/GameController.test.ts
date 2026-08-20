@@ -7,19 +7,19 @@ import {
 import type { ChessMoveInput } from '../domain/chess/ChessRules'
 import { ChessJsAdapter } from '../domain/chess/ChessJsAdapter'
 import type {
-  PlayerProgressV2,
+  PlayerProgressV3,
   ProgressRepository,
 } from './progress/ProgressRepository'
 import { GameController } from './GameController'
 
 class MemoryProgressRepository implements ProgressRepository {
-  private value: PlayerProgressV2 | null = null
+  private value: PlayerProgressV3 | null = null
 
-  load(): PlayerProgressV2 | null {
+  load(): PlayerProgressV3 | null {
     return this.value ? JSON.parse(JSON.stringify(this.value)) : null
   }
 
-  save(progress: PlayerProgressV2): void {
+  save(progress: PlayerProgressV3): void {
     this.value = JSON.parse(JSON.stringify(progress))
   }
 
@@ -31,9 +31,9 @@ class MemoryProgressRepository implements ProgressRepository {
     return this.value ? JSON.stringify(this.value) : null
   }
 
-  importData(serialized: string): PlayerProgressV2 {
+  importData(serialized: string): PlayerProgressV3 {
     this.value = JSON.parse(serialized)
-    return this.load() as PlayerProgressV2
+    return this.load() as PlayerProgressV3
   }
 }
 
@@ -47,6 +47,14 @@ const stage1Moves: readonly ChessMoveInput[] = [
   { from: 'd2', to: 'd3' },
   { from: 'e1', to: 'g1' },
   { from: 'c2', to: 'c3' },
+]
+
+const deepRunMoves: readonly ChessMoveInput[] = [
+  { from: 'f1', to: 'e1' },
+  { from: 'c4', to: 'b3' },
+  { from: 'b1', to: 'd2' },
+  { from: 'd2', to: 'f1' },
+  { from: 'f1', to: 'g3' },
 ]
 
 function createController(
@@ -77,7 +85,7 @@ function completeOnboarding(controller: GameController) {
   return controller.continueAfterStage()
 }
 
-describe('GameController v0.3 flow', () => {
+describe('GameController v0.4 flow', () => {
   let repository: MemoryProgressRepository
   let controller: GameController
 
@@ -164,10 +172,49 @@ describe('GameController v0.3 flow', () => {
     expect(controller.submitLearnerMove(stage1Moves[0]).kind).toBe('accepted')
     expect(controller.getViewModel().nodeId).toBe('italian-after-nf6')
     controller.submitLearnerMove(stage1Moves[1])
-    const completed = controller.submitLearnerMove(stage1Moves[2])
+    expect(controller.submitLearnerMove(stage1Moves[2]).kind).toBe('accepted')
+    const completed = playMoves(controller, deepRunMoves)
 
-    expect(completed.kind).toBe('run-complete')
-    expect(completed.view.runsCompleted).toBe(1)
+    expect(completed?.kind).toBe('run-complete')
+    expect(completed?.view.runsCompleted).toBe(1)
+    expect(completed?.view.lastRun?.decisions).toBe(11)
+    expect(completed?.view.lastRun?.outcome).toBe('completed')
+    expect(completed?.view.lastRun?.branchLabels).toHaveLength(2)
+    expect(completed?.view.coverageTotal).toBe(13)
+  })
+
+  it('charges one life per failed encounter and ends immediately at zero', () => {
+    completeOnboarding(controller)
+    controller.startAdaptiveRun()
+
+    const firstError = controller.submitLearnerMove({ from: 'd2', to: 'd4' })
+    expect(firstError.view.lives).toBe(2)
+    expect(controller.submitLearnerMove({ from: 'd2', to: 'd4' }).view.lives).toBe(2)
+    controller.submitLearnerMove(stage0Moves[0])
+
+    expect(controller.submitLearnerMove({ from: 'd2', to: 'd4' }).view.lives).toBe(1)
+    controller.submitLearnerMove(stage0Moves[1])
+
+    const finalError = controller.submitLearnerMove({ from: 'd2', to: 'd4' })
+    expect(finalError.kind).toBe('run-over')
+    expect(finalError.view.lives).toBe(0)
+    expect(finalError.view.lastRun?.mistakes).toBe(3)
+    expect(finalError.view.result?.primaryLabel).toContain('trois vies')
+  })
+
+  it('spends five gold per deterministic non-repeating hint', () => {
+    completeOnboarding(controller)
+    controller.startAdaptiveRun()
+
+    const first = controller.requestHint()
+    const firstText = first.hint
+    expect(first.goldBalance).toBe(10)
+    expect(first.hintQuality).not.toBeNull()
+
+    const second = controller.requestHint()
+    expect(second.goldBalance).toBe(5)
+    expect(second.hint).not.toBe(firstText)
+    expect(second.runGoldSpent).toBe(10)
   })
 
   it('restores an in-progress continuous session after reload', () => {

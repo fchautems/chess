@@ -1,3 +1,5 @@
+import type { HintQuality } from '../opening/OpeningNode'
+
 export interface NodeMastery {
   nodeId: string
   score: number
@@ -50,9 +52,14 @@ export function recordMasterySuccess(
   now: number,
   hintsUsed: number,
   recoveredAfterError: boolean,
+  hintQuality: HintQuality | null = null,
 ): NodeMastery {
   const mastery = current ?? createNodeMastery(nodeId)
-  const baseGain = recoveredAfterError ? 5 : [22, 14, 9, 5, 3][hintsUsed] ?? 3
+  const baseGain = recoveredAfterError
+    ? 5
+    : hintQuality
+      ? Math.max(3, hintGain(hintQuality) - Math.max(0, hintsUsed - 1) * 2)
+      : ([22, 14, 9, 5, 3][hintsUsed] ?? 3)
   const score = Math.min(100, mastery.score + baseGain)
 
   return {
@@ -64,6 +71,19 @@ export function recordMasterySuccess(
     hintsUsed: mastery.hintsUsed + hintsUsed,
     lastReviewedAt: now,
     nextReviewAt: now + reviewInterval(score),
+  }
+}
+
+function hintGain(quality: HintQuality): number {
+  switch (quality) {
+    case 'weak':
+      return 16
+    case 'medium':
+      return 11
+    case 'strong':
+      return 7
+    case 'exceptional':
+      return 4
   }
 }
 

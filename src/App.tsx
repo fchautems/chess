@@ -103,7 +103,8 @@ export default function App() {
       applyView(controller.continueAfterStage())
     } else if (
       view.phase === 'adaptive-ready' ||
-      view.phase === 'run-complete'
+      view.phase === 'run-complete' ||
+      view.phase === 'run-over'
     ) {
       applyView(controller.startAdaptiveRun())
     } else {
@@ -148,7 +149,7 @@ export default function App() {
             Maîtrise {view.masteryScore}% · couverture {view.coverageCount}/
             {view.coverageTotal}
           </span>
-          <strong>Adaptatif · v0.3</strong>
+          <strong>Runs & économie · v0.4</strong>
         </div>
       </header>
 
@@ -164,6 +165,12 @@ export default function App() {
         />
 
         <aside className={`coach-card ${view.result ? 'result-card' : ''}`}>
+          <div className="run-hud" aria-label="État du run">
+            <span title="Vies">❤️ {view.lives ?? 3}</span>
+            <span title="Or">🪙 {view.goldBalance}</span>
+            <span title="Combo">🔥 {view.streak}</span>
+          </div>
+
           <div className="stage-row">
             <span>Étape {view.stageIndex}</span>
             <span>
@@ -211,8 +218,16 @@ export default function App() {
 
               {view.hint && (
                 <p className="hint-message" aria-live="polite">
-                  <strong>Indice demandé</strong>
+                  <strong>
+                    Indice acheté · −{view.hintCost} 🪙
+                  </strong>
                   {view.hint}
+                </p>
+              )}
+
+              {view.eventMessage && (
+                <p className="event-message" aria-live="polite">
+                  {view.eventMessage}
                 </p>
               )}
 
@@ -248,9 +263,16 @@ export default function App() {
             </span>
           </div>
 
-          {!view.result && view.canRequestHint && (
-            <button className="hint-button" type="button" onClick={handleHint}>
-              Besoin d’un indice ?
+          {!view.result &&
+            (view.canRequestHint || view.hintUnavailableReason) && (
+            <button
+              className="hint-button"
+              type="button"
+              onClick={handleHint}
+              disabled={!view.canRequestHint}
+              title={view.hintUnavailableReason ?? undefined}
+            >
+              💡 Indice aléatoire · {view.hintCost} 🪙
             </button>
           )}
 

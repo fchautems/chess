@@ -1,10 +1,12 @@
 import type {
   PersistedSession,
   PersistedTrainingPhase,
-  PlayerProgressV2,
+  PlayerProgressV3,
   ProgressRepository,
+  RunSummary,
 } from '../../application/progress/ProgressRepository'
 import type { NodeMastery } from '../../domain/mastery/NodeMastery'
+import type { RunState } from '../../domain/run/RunEngine'
 
 interface StoragePort {
   getItem(key: string): string | null
@@ -19,6 +21,28 @@ interface LegacyProgressV1 {
   completedLessonIds: readonly string[]
 }
 
+interface LegacySessionV2 {
+  currentNodeId: string
+  fen: string
+  moveHistory: readonly string[]
+  learnerMovesCompleted: number
+  currentHintsUsed: number
+  recoveredAfterError: boolean
+}
+
+interface LegacyProgressV2 {
+  schemaVersion: 2
+  phase: Exclude<PersistedTrainingPhase, 'run-over'>
+  activeStageIndex: number
+  completedStageIds: readonly string[]
+  masteryByNodeId: Readonly<Record<string, NodeMastery>>
+  randomSeed: number
+  directorDecisionIndex: number
+  runsCompleted: number
+  deepestRun: number
+  session: LegacySessionV2 | null
+}
+
 const STORAGE_KEY = 'chess-openings-trainer.progress'
 const DEFAULT_SEED = 73_941
 
@@ -30,6 +54,7 @@ const phases = new Set<PersistedTrainingPhase>([
   'adaptive-ready',
   'adaptive-run',
   'run-complete',
+  'run-over',
 ])
 
 const lessonToNode: Readonly<Record<string, string>> = {
@@ -41,7 +66,7 @@ const lessonToNode: Readonly<Record<string, string>> = {
   'lesson-c3': 'italian-after-d6',
 }
 
-function parseProgress(serialized: string): PlayerProgressV2 {
+function parseProgress(serialized: string): PlayerProgressV3 {
   const value: unknown = JSON.parse(serialized)
 
   if (!value || typeof value !== 'object') {
@@ -54,11 +79,15 @@ function parseProgress(serialized: string): PlayerProgressV2 {
     return migrateLegacyProgress(value as LegacyProgressV1)
   }
 
-  if (schemaVersion !== 2) {
+  if (schemaVersion === 2) {
+    return migrateV2Progress(value as LegacyProgressV2)
+  }
+
+  if (schemaVersion !== 3) {
     throw new Error('Version de sauvegarde non prise en charge.')
   }
 
-  const candidate = value as Partial<PlayerProgressV2>
+  const candidate = value as Partial<PlayerProgressV3>
 
   if (
     !candidate.phase ||
@@ -71,13 +100,17 @@ function parseProgress(serialized: string): PlayerProgressV2 {
     !Number.isInteger(candidate.directorDecisionIndex) ||
     !Number.isInteger(candidate.runsCompleted) ||
     !Number.isInteger(candidate.deepestRun) ||
+    !Number.isInteger(candidate.goldBalance) ||
+    !Number.isInteger(candidate.bestStreak) ||
+    !Number.isInteger(candidate.hintDrawIndex) ||
+    !isRunSummary(candidate.lastRun) ||
     !isSession(candidate.session)
   ) {
     throw new Error('La sauvegarde est incomplète ou corrompue.')
   }
 
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     phase: candidate.phase,
     activeStageIndex: candidate.activeStageIndex as number,
     completedStageIds: [...new Set(candidate.completedStageIds)],
@@ -86,11 +119,15 @@ function parseProgress(serialized: string): PlayerProgressV2 {
     directorDecisionIndex: candidate.directorDecisionIndex as number,
     runsCompleted: candidate.runsCompleted as number,
     deepestRun: candidate.deepestRun as number,
+    goldBalance: candidate.goldBalance as number,
+    bestStreak: candidate.bestStreak as number,
+    hintDrawIndex: candidate.hintDrawIndex as number,
+    lastRun: candidate.lastRun ? { ...candidate.lastRun } : null,
     session: candidate.session ? { ...candidate.session } : null,
   }
 }
 
-function migrateLegacyProgress(value: LegacyProgressV1): PlayerProgressV2 {
+function migrateLegacyProgress(value: LegacyProgressV1): PlayerProgressV3 {
   if (
     typeof value.activeLessonId !== 'string' ||
     !Array.isArray(value.completedLessonIds) ||
@@ -128,7 +165,7 @@ function migrateLegacyProgress(value: LegacyProgressV1): PlayerProgressV2 {
     ['lesson-d3', 'lesson-castle', 'lesson-c3'].every((id) => completed.has(id))
 
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     phase: stage1Complete ? 'adaptive-ready' : 'discovering',
     activeStageIndex: stage0Complete ? 1 : 0,
     completedStageIds: [
@@ -140,7 +177,55 @@ function migrateLegacyProgress(value: LegacyProgressV1): PlayerProgressV2 {
     directorDecisionIndex: 0,
     runsCompleted: 0,
     deepestRun: 0,
+    goldBalance: 15,
+    bestStreak: 0,
+    hintDrawIndex: 0,
+    lastRun: null,
     session: null,
+  }
+}
+
+function migrateV2Progress(value: LegacyProgressV2): PlayerProgressV3 {
+  if (
+    !value.phase ||
+    !phases.has(value.phase) ||
+    !Number.isInteger(value.activeStageIndex) ||
+    !Array.isArray(value.completedStageIds) ||
+    !value.completedStageIds.every((id) => typeof id === 'string') ||
+    !isMasteryRecord(value.masteryByNodeId) ||
+    !Number.isInteger(value.randomSeed) ||
+    !Number.isInteger(value.directorDecisionIndex) ||
+    !Number.isInteger(value.runsCompleted) ||
+    !Number.isInteger(value.deepestRun) ||
+    !isLegacySession(value.session)
+  ) {
+    throw new Error('La sauvegarde v0.3 est incomplète ou corrompue.')
+  }
+
+  return {
+    schemaVersion: 3,
+    phase: value.phase,
+    activeStageIndex: value.activeStageIndex,
+    completedStageIds: [...new Set(value.completedStageIds)],
+    masteryByNodeId: cloneMastery(value.masteryByNodeId),
+    randomSeed: value.randomSeed,
+    directorDecisionIndex: value.directorDecisionIndex,
+    runsCompleted: value.runsCompleted,
+    deepestRun: value.deepestRun,
+    goldBalance: 15,
+    bestStreak: 0,
+    hintDrawIndex: 0,
+    lastRun: null,
+    session: value.session
+      ? {
+          ...value.session,
+          currentHintQuality: null,
+          seenHintTexts: [],
+          runState: value.phase === 'adaptive-run' ? createMigratedRunState() : null,
+          improvedNodeIds: [],
+          branchLabels: [],
+        }
+      : null,
   }
 }
 
@@ -177,8 +262,88 @@ function isSession(value: unknown): value is PersistedSession | null {
     candidate.moveHistory.every((move) => typeof move === 'string') &&
     typeof candidate.learnerMovesCompleted === 'number' &&
     typeof candidate.currentHintsUsed === 'number' &&
+    (candidate.currentHintQuality === null ||
+      candidate.currentHintQuality === 'weak' ||
+      candidate.currentHintQuality === 'medium' ||
+      candidate.currentHintQuality === 'strong' ||
+      candidate.currentHintQuality === 'exceptional') &&
+    Array.isArray(candidate.seenHintTexts) &&
+    candidate.seenHintTexts.every((text) => typeof text === 'string') &&
+    typeof candidate.recoveredAfterError === 'boolean' &&
+    isRunState(candidate.runState) &&
+    Array.isArray(candidate.improvedNodeIds) &&
+    candidate.improvedNodeIds.every((id) => typeof id === 'string') &&
+    Array.isArray(candidate.branchLabels) &&
+    candidate.branchLabels.every((label) => typeof label === 'string')
+  )
+}
+
+function isLegacySession(value: unknown): value is LegacySessionV2 | null {
+  if (value === null) return true
+  if (!value || typeof value !== 'object') return false
+  const candidate = value as Partial<LegacySessionV2>
+  return (
+    typeof candidate.currentNodeId === 'string' &&
+    typeof candidate.fen === 'string' &&
+    Array.isArray(candidate.moveHistory) &&
+    candidate.moveHistory.every((move) => typeof move === 'string') &&
+    typeof candidate.learnerMovesCompleted === 'number' &&
+    typeof candidate.currentHintsUsed === 'number' &&
     typeof candidate.recoveredAfterError === 'boolean'
   )
+}
+
+function isRunState(value: unknown): value is RunState | null {
+  if (value === null) return true
+  if (!value || typeof value !== 'object') return false
+  const candidate = value as Partial<RunState>
+  return (
+    (candidate.status === 'active' ||
+      candidate.status === 'completed' ||
+      candidate.status === 'out-of-lives') &&
+    Number.isInteger(candidate.lives) &&
+    Number.isInteger(candidate.streak) &&
+    Number.isInteger(candidate.bestStreak) &&
+    Number.isInteger(candidate.decisions) &&
+    Number.isInteger(candidate.mistakes) &&
+    Number.isInteger(candidate.hintsPurchased) &&
+    Number.isInteger(candidate.goldEarned) &&
+    Number.isInteger(candidate.goldSpent)
+  )
+}
+
+function isRunSummary(value: unknown): value is RunSummary | null {
+  if (value === null) return true
+  if (!value || typeof value !== 'object') return false
+  const candidate = value as Partial<RunSummary>
+  return (
+    (candidate.outcome === 'completed' || candidate.outcome === 'out-of-lives') &&
+    Number.isInteger(candidate.decisions) &&
+    Number.isInteger(candidate.deepestPoint) &&
+    Number.isInteger(candidate.mistakes) &&
+    Number.isInteger(candidate.hintsPurchased) &&
+    Number.isInteger(candidate.goldEarned) &&
+    Number.isInteger(candidate.goldSpent) &&
+    Number.isInteger(candidate.bestStreak) &&
+    Array.isArray(candidate.improvedNodeIds) &&
+    candidate.improvedNodeIds.every((id) => typeof id === 'string') &&
+    Array.isArray(candidate.branchLabels) &&
+    candidate.branchLabels.every((label) => typeof label === 'string')
+  )
+}
+
+function createMigratedRunState(): RunState {
+  return {
+    status: 'active',
+    lives: 3,
+    streak: 0,
+    bestStreak: 0,
+    decisions: 0,
+    mistakes: 0,
+    hintsPurchased: 0,
+    goldEarned: 0,
+    goldSpent: 0,
+  }
 }
 
 function cloneMastery(
@@ -198,7 +363,7 @@ export class LocalStorageProgressRepository implements ProgressRepository {
     private readonly key = STORAGE_KEY,
   ) {}
 
-  load(): PlayerProgressV2 | null {
+  load(): PlayerProgressV3 | null {
     let serialized: string | null
 
     try {
@@ -212,7 +377,7 @@ export class LocalStorageProgressRepository implements ProgressRepository {
     try {
       const progress = parseProgress(serialized)
 
-      if ((JSON.parse(serialized) as { schemaVersion?: number }).schemaVersion === 1) {
+      if ((JSON.parse(serialized) as { schemaVersion?: number }).schemaVersion !== 3) {
         this.save(progress)
       }
 
@@ -222,7 +387,7 @@ export class LocalStorageProgressRepository implements ProgressRepository {
     }
   }
 
-  save(progress: PlayerProgressV2): void {
+  save(progress: PlayerProgressV3): void {
     try {
       this.storage.setItem(this.key, JSON.stringify(progress))
     } catch {
@@ -246,7 +411,7 @@ export class LocalStorageProgressRepository implements ProgressRepository {
     }
   }
 
-  importData(serialized: string): PlayerProgressV2 {
+  importData(serialized: string): PlayerProgressV3 {
     const progress = parseProgress(serialized)
     this.save(progress)
     return progress

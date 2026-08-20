@@ -16,15 +16,25 @@ import {
 } from '../domain/mastery/NodeMastery'
 import type { OpeningGraph } from '../domain/opening/OpeningGraph'
 import { toUci } from '../domain/opening/OpeningMove'
-import type { OpeningNode } from '../domain/opening/OpeningNode'
+import { drawHint, HINT_COST } from '../domain/hints/HintEngine'
+import type { HintQuality, OpeningNode } from '../domain/opening/OpeningNode'
+import {
+  completeRun,
+  createRunState,
+  recordHintPurchase,
+  recordRunFailure,
+  recordRunSuccess,
+  type RunState,
+} from '../domain/run/RunEngine'
 import {
   SessionDirector,
   type SessionStrategy,
 } from '../domain/session/SessionDirector'
 import type {
   PersistedTrainingPhase,
-  PlayerProgressV2,
+  PlayerProgressV3,
   ProgressRepository,
+  RunSummary,
 } from './progress/ProgressRepository'
 import type {
   BoardMoveView,
@@ -50,13 +60,23 @@ export class GameController {
   private directorDecisionIndex: number
   private runsCompleted: number
   private deepestRun: number
+  private goldBalance: number
+  private bestStreak: number
+  private hintDrawIndex: number
+  private lastRun: RunSummary | null
   private feedback: string | null = null
   private hint: string | null = null
+  private currentHintQuality: HintQuality | null = null
+  private seenHintTexts: string[] = []
+  private eventMessage: string | null = null
   private moveHistory: string[] = []
   private lastMove: BoardMoveView | null = null
   private learnerMovesCompleted = 0
   private currentHintsUsed = 0
   private recoveredAfterError = false
+  private runState: RunState | null = null
+  private readonly improvedNodeIds = new Set<string>()
+  private branchLabels: string[] = []
   private lastBranchStrategy: SessionStrategy | null = null
   private readonly now: () => number
   private readonly director: SessionDirector
@@ -86,6 +106,10 @@ export class GameController {
     this.directorDecisionIndex = restored.directorDecisionIndex
     this.runsCompleted = restored.runsCompleted
     this.deepestRun = restored.deepestRun
+    this.goldBalance = restored.goldBalance
+    this.bestStreak = restored.bestStreak
+    this.hintDrawIndex = restored.hintDrawIndex
+    this.lastRun = restored.lastRun ? { ...restored.lastRun } : null
     this.currentNodeId = curriculum.startNodeId
 
     if (!this.restoreSession(restored)) {
@@ -105,7 +129,11 @@ export class GameController {
 
     if (!appliedMove) {
       this.feedback = node.errorExplanation
-      this.recordFailureOnce(node.id)
+      if (this.recordFailureOnce(node.id) && this.runHasEnded()) {
+        this.finishRun('out-of-lives')
+        this.saveProgress()
+        return this.result('run-over')
+      }
       this.saveProgress()
       return this.result('illegal')
     }
@@ -117,37 +145,65 @@ export class GameController {
     if (!acceptedMove) {
       this.rules.load(previousFen)
       this.feedback = node.errorExplanation
-      this.recordFailureOnce(node.id)
+      if (this.recordFailureOnce(node.id) && this.runHasEnded()) {
+        this.finishRun('out-of-lives')
+        this.saveProgress()
+        return this.result('run-over')
+      }
       this.saveProgress()
       return this.result('outside-training-line')
     }
 
     const answeredNodeId = node.id
+    const masteryBefore = this.masteryByNodeId.get(answeredNodeId)
+    const hintsUsed = this.currentHintsUsed
+    const hintQuality = this.currentHintQuality
+    const recovered = this.recoveredAfterError
     this.masteryByNodeId.set(
       answeredNodeId,
       recordMasterySuccess(
-        this.masteryByNodeId.get(answeredNodeId),
+        masteryBefore,
         answeredNodeId,
         this.now(),
-        this.currentHintsUsed,
-        this.recoveredAfterError,
+        hintsUsed,
+        recovered,
+        hintQuality,
       ),
     )
+    this.improvedNodeIds.add(answeredNodeId)
     this.feedback = null
     this.hint = null
+    this.currentHintQuality = null
+    this.seenHintTexts = []
     this.currentHintsUsed = 0
     this.recoveredAfterError = false
     this.recordMove(appliedMove)
     this.learnerMovesCompleted += 1
+
     if (this.phase === 'adaptive-run') {
       this.deepestRun = Math.max(this.deepestRun, this.learnerMovesCompleted)
+      const success = recordRunSuccess(this.requireRunState(), {
+        assisted: hintsUsed > 0,
+        recovered,
+        masteryBefore: masteryBefore?.score ?? 0,
+        attemptsBefore: masteryBefore?.attempts ?? 0,
+      })
+      this.runState = success.state
+      this.goldBalance += success.goldReward
+      this.bestStreak = Math.max(this.bestStreak, success.state.bestStreak)
+      this.eventMessage = this.successEventMessage(
+        success.goldReward,
+        success.milestone,
+        recovered,
+      )
     }
+
     this.currentNodeId = acceptedMove.targetNodeId
     this.assertPositionMatchesNode(this.currentNode())
 
     if (this.phase === 'adaptive-run' && this.currentNode().type === 'completion') {
-      this.phase = 'run-complete'
-      this.runsCompleted += 1
+      this.runState = completeRun(this.requireRunState())
+      this.finishRun('completed')
       this.saveProgress()
       return this.result('run-complete')
     }
@@ -187,10 +243,39 @@ export class GameController {
       return this.getViewModel()
     }
 
-    const qualities = ['weak', 'medium', 'strong', 'exceptional'] as const
-    const quality = qualities[Math.min(this.currentHintsUsed, qualities.length - 1)]
-    this.hint = node.hints[quality].find((text) => text.trim().length > 0) ?? node.prompt
+    if (this.goldBalance < HINT_COST) {
+      this.feedback = `Il te faut ${HINT_COST} pièces pour acheter un indice.`
+      return this.getViewModel()
+    }
+
+    const drawn = drawHint(
+      node.hints,
+      this.currentHintsUsed,
+      this.seenHintTexts,
+      this.randomSeed,
+      this.hintDrawIndex,
+    )
+
+    if (!drawn) {
+      this.feedback = 'Tous les indices de cette position ont déjà été révélés.'
+      return this.getViewModel()
+    }
+
+    this.goldBalance -= HINT_COST
+    this.hintDrawIndex += 1
+    this.hint = drawn.text
+    this.currentHintQuality = moreDirectQuality(
+      this.currentHintQuality,
+      drawn.quality,
+    )
+    this.seenHintTexts.push(drawn.text)
     this.currentHintsUsed += 1
+    this.feedback = null
+
+    if (this.phase === 'adaptive-run') {
+      this.runState = recordHintPurchase(this.requireRunState(), HINT_COST)
+    }
+
     this.saveProgress()
     return this.getViewModel()
   }
@@ -212,6 +297,8 @@ export class GameController {
       this.phase = 'discovering'
       this.feedback = null
       this.hint = null
+      this.currentHintQuality = null
+      this.seenHintTexts = []
       this.learnerMovesCompleted = 0
       this.currentHintsUsed = 0
       this.recoveredAfterError = false
@@ -225,11 +312,19 @@ export class GameController {
   }
 
   startAdaptiveRun(): GameViewModel {
-    if (this.phase !== 'adaptive-ready' && this.phase !== 'run-complete') {
+    if (
+      this.phase !== 'adaptive-ready' &&
+      this.phase !== 'run-complete' &&
+      this.phase !== 'run-over'
+    ) {
       return this.getViewModel()
     }
 
     this.phase = 'adaptive-run'
+    this.runState = createRunState()
+    this.improvedNodeIds.clear()
+    this.branchLabels = []
+    this.eventMessage = 'Nouveau run · trois vies pour aller le plus loin possible.'
     this.resetBoardTo(this.curriculum.startNodeId)
     this.saveProgress()
     return this.getViewModel()
@@ -239,6 +334,10 @@ export class GameController {
     if (!this.isInteractive()) return this.getViewModel()
 
     if (this.phase === 'adaptive-run') {
+      this.runState = createRunState()
+      this.improvedNodeIds.clear()
+      this.branchLabels = []
+      this.eventMessage = 'Run relancé · trois vies restaurées.'
       this.resetBoardTo(this.curriculum.startNodeId)
     } else {
       this.prepareStageStart()
@@ -258,14 +357,29 @@ export class GameController {
     this.directorDecisionIndex = 0
     this.runsCompleted = 0
     this.deepestRun = 0
+    this.goldBalance = 15
+    this.bestStreak = 0
+    this.hintDrawIndex = 0
+    this.lastRun = null
+    this.runState = null
+    this.improvedNodeIds.clear()
+    this.branchLabels = []
+    this.eventMessage = null
     this.lastBranchStrategy = null
     this.prepareStageStart()
     return this.getViewModel()
   }
 
   getViewModel(): GameViewModel {
-    const stage = this.activeStage()
+    const isRunView =
+      this.phase === 'adaptive-run' ||
+      this.phase === 'run-complete' ||
+      this.phase === 'run-over'
+    const stage = isRunView
+      ? this.graph.getStage(this.currentNode().curriculumStageId)
+      : this.activeStage()
     const stageLessons = this.stageLessons()
+    const runDecisionTarget = this.maximumRunDecisions()
     const learnerNodes = this.learnerDecisionNodes()
     const masteredNodes = learnerNodes
       .map((node) => this.masteryByNodeId.get(node.id))
@@ -285,22 +399,30 @@ export class GameController {
       stageIndex: stage.index,
       stageTitle: stage.title,
       stageMovesCompleted:
-        this.phase === 'checkpoint-ready' || this.phase === 'stage-complete'
+        isRunView
+          ? Math.min(this.learnerMovesCompleted, runDecisionTarget)
+          : this.phase === 'checkpoint-ready' || this.phase === 'stage-complete'
           ? stageLessons.length
           : Math.min(this.learnerMovesCompleted, stageLessons.length),
-      stageMovesTotal: stageLessons.length,
+      stageMovesTotal: isRunView ? runDecisionTarget : stageLessons.length,
       coachLabel: this.coachLabel(),
       prompt: this.currentPrompt(),
       feedback: this.feedback,
       hint: this.hint,
+      hintQuality: this.currentHintQuality,
+      hintCost: HINT_COST,
       canRequestHint:
-        this.isInteractive() && this.currentNode().type === 'learner-decision',
+        this.isInteractive() &&
+        this.currentNode().type === 'learner-decision' &&
+        this.goldBalance >= HINT_COST &&
+        this.availableHintCount(this.currentNode()) > 0,
+      hintUnavailableReason: this.hintUnavailableReason(),
       moveHistory: [...this.moveHistory],
       lastMove: this.lastMove ? { ...this.lastMove } : null,
       learnerMovesCompleted: this.learnerMovesCompleted,
       learnerMovesTotal:
-        this.phase === 'adaptive-run' || this.phase === 'run-complete'
-          ? this.curriculum.lessons.length
+        isRunView
+          ? runDecisionTarget
           : stageLessons.length,
       completedStages: this.completedStageIds.size,
       totalStages: this.stageIds().length,
@@ -311,7 +433,15 @@ export class GameController {
       currentNodeMastery: this.masteryByNodeId.get(this.currentNodeId)?.score ?? 0,
       runsCompleted: this.runsCompleted,
       deepestRun: this.deepestRun,
+      goldBalance: this.goldBalance,
+      lives: this.runState?.lives ?? this.lastRunLives(),
+      streak: this.runState?.streak ?? 0,
+      bestStreak: this.bestStreak,
+      runGoldEarned: this.runState?.goldEarned ?? this.lastRun?.goldEarned ?? 0,
+      runGoldSpent: this.runState?.goldSpent ?? this.lastRun?.goldSpent ?? 0,
+      eventMessage: this.eventMessage,
       lastBranchStrategy: this.lastBranchStrategy,
+      lastRun: this.lastRun ? { ...this.lastRun } : null,
       result: this.resultView(),
     }
   }
@@ -335,6 +465,7 @@ export class GameController {
         reply = directed.move
         this.lastBranchStrategy = directed.strategy
         this.directorDecisionIndex += 1
+        this.branchLabels.push(branchLabel(node.id, reply.san))
       }
 
       const appliedMove = this.rules.move(reply)
@@ -357,6 +488,7 @@ export class GameController {
     }
 
     if (this.phase === 'adaptive-run') {
+      this.runState ??= createRunState()
       this.resetBoardTo(this.curriculum.startNodeId)
       return
     }
@@ -373,6 +505,8 @@ export class GameController {
     this.currentNodeId = nodeId
     this.feedback = null
     this.hint = null
+    this.currentHintQuality = null
+    this.seenHintTexts = []
     this.moveHistory = []
     this.lastMove = null
     this.learnerMovesCompleted = 0
@@ -382,7 +516,7 @@ export class GameController {
     this.assertPositionMatchesNode(this.currentNode())
   }
 
-  private restoreSession(progress: PlayerProgressV2): boolean {
+  private restoreSession(progress: PlayerProgressV3): boolean {
     if (!this.isInteractivePhase(progress.phase) || !progress.session) return false
 
     try {
@@ -392,7 +526,15 @@ export class GameController {
       this.moveHistory = [...progress.session.moveHistory]
       this.learnerMovesCompleted = progress.session.learnerMovesCompleted
       this.currentHintsUsed = progress.session.currentHintsUsed
+      this.currentHintQuality = progress.session.currentHintQuality
+      this.seenHintTexts = [...progress.session.seenHintTexts]
       this.recoveredAfterError = progress.session.recoveredAfterError
+      this.runState = progress.session.runState
+        ? { ...progress.session.runState }
+        : null
+      this.improvedNodeIds.clear()
+      progress.session.improvedNodeIds.forEach((id) => this.improvedNodeIds.add(id))
+      this.branchLabels = [...progress.session.branchLabels]
       return true
     } catch {
       return false
@@ -417,6 +559,8 @@ export class GameController {
         return 'Continue aussi loin que possible : les Noirs peuvent changer l’ordre de leurs coups.'
       case 'run-complete':
         return 'Run terminé : la maîtrise et les positions à revoir ont été mises à jour.'
+      case 'run-over':
+        return 'Les trois vies sont perdues. Le bilan montre exactement où repartir.'
     }
   }
 
@@ -438,6 +582,8 @@ export class GameController {
           : 'Session adaptative'
       case 'run-complete':
         return 'Bilan du run'
+      case 'run-over':
+        return 'Fin du run'
     }
   }
 
@@ -483,14 +629,23 @@ export class GameController {
       }
     }
 
-    if (this.phase === 'run-complete') {
+    if (this.phase === 'run-complete' || this.phase === 'run-over') {
+      const summary = this.lastRun
+      const succeeded = this.phase === 'run-complete'
       return {
-        title: 'Structure atteinte',
-        message:
-          'Run réussi. Chaque décision a renforcé sa position propre, même si l’ordre des Noirs a varié.',
-        concepts: [`Maîtrise globale ${this.getMasteryAverage()} %`],
+        title: succeeded ? 'Structure profonde atteinte' : 'Run terminé',
+        message: succeeded
+          ? 'Tu as traversé la structure complète malgré les variations de l’ordre noir.'
+          : `Tu as atteint ${summary?.deepestPoint ?? 0} décisions. Les positions fragiles reviendront dans les prochains runs.`,
+        concepts: [
+          `Maîtrise globale ${this.getMasteryAverage()} %`,
+          `Meilleur combo ${summary?.bestStreak ?? 0}`,
+          `Or +${summary?.goldEarned ?? 0} / −${summary?.goldSpent ?? 0}`,
+          `${summary?.improvedNodeIds.length ?? 0} positions renforcées`,
+          `Branches : ${summary?.branchLabels.join(' · ') || 'tronc principal'}`,
+        ],
         learnerMoveSequence: [],
-        primaryLabel: 'Rejouer une autre variante',
+        primaryLabel: succeeded ? 'Rejouer une autre variante' : 'Repartir avec trois vies',
       }
     }
 
@@ -507,14 +662,21 @@ export class GameController {
     )
   }
 
-  private recordFailureOnce(nodeId: string): void {
-    if (this.recoveredAfterError) return
+  private recordFailureOnce(nodeId: string): boolean {
+    if (this.recoveredAfterError) return false
 
     this.masteryByNodeId.set(
       nodeId,
       recordMasteryFailure(this.masteryByNodeId.get(nodeId), nodeId, this.now()),
     )
     this.recoveredAfterError = true
+    this.eventMessage = null
+
+    if (this.phase === 'adaptive-run') {
+      this.runState = recordRunFailure(this.requireRunState())
+    }
+
+    return true
   }
 
   private recordMove(move: AppliedChessMove): void {
@@ -553,7 +715,7 @@ export class GameController {
     const target = this.graph.getNode(this.stageEndLesson().targetNodeId)
     return target.type === 'learner-decision'
       ? target.preferredTrainingMove.targetNodeId
-      : this.curriculum.startNodeId
+      : target.id
   }
 
   private learnerDecisionNodes() {
@@ -576,7 +738,7 @@ export class GameController {
 
   private saveProgress(): void {
     this.progressRepository.save({
-      schemaVersion: 2,
+      schemaVersion: 3,
       phase: this.phase,
       activeStageIndex: this.activeStageIndex,
       completedStageIds: this.stageIds().filter((stageId) =>
@@ -592,6 +754,10 @@ export class GameController {
       directorDecisionIndex: this.directorDecisionIndex,
       runsCompleted: this.runsCompleted,
       deepestRun: this.deepestRun,
+      goldBalance: this.goldBalance,
+      bestStreak: this.bestStreak,
+      hintDrawIndex: this.hintDrawIndex,
+      lastRun: this.lastRun ? { ...this.lastRun } : null,
       session: this.isInteractive()
         ? {
             currentNodeId: this.currentNodeId,
@@ -599,18 +765,23 @@ export class GameController {
             moveHistory: [...this.moveHistory],
             learnerMovesCompleted: this.learnerMovesCompleted,
             currentHintsUsed: this.currentHintsUsed,
+            currentHintQuality: this.currentHintQuality,
+            seenHintTexts: [...this.seenHintTexts],
             recoveredAfterError: this.recoveredAfterError,
+            runState: this.runState ? { ...this.runState } : null,
+            improvedNodeIds: [...this.improvedNodeIds],
+            branchLabels: [...this.branchLabels],
           }
         : null,
     })
   }
 
   private restoreProgress(
-    progress: PlayerProgressV2 | null,
+    progress: PlayerProgressV3 | null,
     seed: number | undefined,
-  ): PlayerProgressV2 {
-    const defaultProgress: PlayerProgressV2 = {
-      schemaVersion: 2,
+  ): PlayerProgressV3 {
+    const defaultProgress: PlayerProgressV3 = {
+      schemaVersion: 3,
       phase: 'discovering',
       activeStageIndex: 0,
       completedStageIds: [],
@@ -619,6 +790,10 @@ export class GameController {
       directorDecisionIndex: 0,
       runsCompleted: 0,
       deepestRun: 0,
+      goldBalance: 15,
+      bestStreak: 0,
+      hintDrawIndex: 0,
+      lastRun: null,
       session: null,
     }
 
@@ -644,6 +819,93 @@ export class GameController {
       ),
       masteryByNodeId,
     }
+  }
+
+  private requireRunState(): RunState {
+    if (!this.runState) {
+      throw new Error('An adaptive run requires an active run state')
+    }
+
+    return this.runState
+  }
+
+  private runHasEnded(): boolean {
+    return this.phase === 'adaptive-run' && this.runState?.status === 'out-of-lives'
+  }
+
+  private finishRun(outcome: RunSummary['outcome']): void {
+    const run = this.requireRunState()
+    this.lastRun = {
+      outcome,
+      decisions: run.decisions,
+      deepestPoint: this.learnerMovesCompleted,
+      mistakes: run.mistakes,
+      hintsPurchased: run.hintsPurchased,
+      goldEarned: run.goldEarned,
+      goldSpent: run.goldSpent,
+      bestStreak: run.bestStreak,
+      improvedNodeIds: [...this.improvedNodeIds],
+      branchLabels: [...this.branchLabels],
+    }
+    this.bestStreak = Math.max(this.bestStreak, run.bestStreak)
+    this.runsCompleted += 1
+    this.phase = outcome === 'completed' ? 'run-complete' : 'run-over'
+    this.eventMessage =
+      outcome === 'completed'
+        ? 'Run réussi · nouvelle profondeur consolidée.'
+        : 'Dernière vie perdue · les faiblesses sont enregistrées.'
+  }
+
+  private successEventMessage(
+    goldReward: number,
+    milestone: number | null,
+    recovered: boolean,
+  ): string | null {
+    if (milestone) return `Combo ${milestone} · +${goldReward} pièces`
+    if (recovered) return `Récupération réussie · +${goldReward} pièces`
+    return goldReward > 0 ? `Bonne décision · +${goldReward} pièce${goldReward > 1 ? 's' : ''}` : null
+  }
+
+  private availableHintCount(node: OpeningNode): number {
+    return Object.values(node.hints)
+      .flat()
+      .filter(
+        (text) => text.trim().length > 0 && !this.seenHintTexts.includes(text),
+      ).length
+  }
+
+  private hintUnavailableReason(): string | null {
+    const node = this.currentNode()
+    if (!this.isInteractive() || node.type !== 'learner-decision') return null
+    if (this.goldBalance < HINT_COST) return `Il faut ${HINT_COST} pièces.`
+    if (this.availableHintCount(node) === 0) return 'Tous les indices sont révélés.'
+    return null
+  }
+
+  private lastRunLives(): number | null {
+    if (!this.lastRun) return null
+    return this.lastRun.outcome === 'out-of-lives' ? 0 : null
+  }
+
+  private maximumRunDecisions(): number {
+    const visit = (nodeId: string, path: ReadonlySet<string>): number => {
+      if (path.has(nodeId)) throw new Error(`Opening graph cycle detected at ${nodeId}`)
+      const node = this.graph.getNode(nodeId)
+      if (node.type === 'completion') return 0
+
+      const nextPath = new Set(path)
+      nextPath.add(nodeId)
+      const moves =
+        node.type === 'learner-decision'
+          ? node.acceptedLearnerMoves
+          : node.opponentMoves
+      const remaining = Math.max(
+        ...moves.map((move) => visit(move.targetNodeId, nextPath)),
+      )
+      return (node.type === 'learner-decision' ? 1 : 0) + remaining
+    }
+
+    return visit(this.curriculum.startNodeId, new Set())
   }
 
   private assertCurriculumValid(): void {
@@ -697,4 +959,26 @@ function strategyLabel(strategy: SessionStrategy): string {
     case 'surprise':
       return 'surprise'
   }
+}
+
+function moreDirectQuality(
+  current: HintQuality | null,
+  candidate: HintQuality,
+): HintQuality {
+  const qualities: readonly HintQuality[] = [
+    'weak',
+    'medium',
+    'strong',
+    'exceptional',
+  ]
+  if (!current) return candidate
+  return qualities.indexOf(candidate) > qualities.indexOf(current)
+    ? candidate
+    : current
+}
+
+function branchLabel(nodeId: string, san: string): string {
+  if (nodeId === 'italian-after-bc4') return `…${san} en premier`
+  if (nodeId === 'italian-after-c3') return `…${san} après c3`
+  return `…${san}`
 }

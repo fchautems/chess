@@ -667,6 +667,8 @@ vary, and weak/due nodes demonstrably return more often.
 
 ### v0.4 — Game loop
 
+Status: **completed**
+
 Goal: make a 5–10 minute run varied, understandable and worth replaying.
 
 Build it in three internal slices; do not publish a thin economy on top of the
@@ -702,6 +704,24 @@ current seven learner-decision positions.
 Exit criterion: runs vary materially, lives create tension without blocking
 learning, gold creates a real hint decision, and the player immediately wants to
 retry after a failed or record-setting run.
+
+Implemented outcome:
+
+- 26-node Italian graph with 13 learner-decision nodes
+- ordinary adaptive path of 11 learner decisions
+- branch points at `3...Bc5/3...Nf6` and `...O-O/...a6`
+- two position-key transpositions validated from different move orders
+- three lives with one-life maximum loss per encounter and recovery
+- clean streaks plus milestones at 3, 5 and 10
+- persistent gold, 15-piece migration/start balance and 5-piece hints
+- seeded variable hint quality, improving distributions and no duplicate text
+- results containing depth, branches, streak, gold and improved positions
+- schema-v3 migration preserving v0.2/v0.3 learning state
+- deterministic unit/integration/economy coverage
+
+Deliberately retained for v0.5: sound effects, final art, animations, progression
+map, cosmetics and the first boss. These improve the proven loop rather than
+being required to make its rules work.
 
 ### v0.5 — Polish
 

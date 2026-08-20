@@ -112,6 +112,23 @@ h1 {
   backdrop-filter: blur(18px);
 }
 
+.run-hud {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+  margin-bottom: 18px;
+}
+
+.run-hud span {
+  padding: 9px 7px;
+  border: 1px solid rgba(133, 96, 59, 0.15);
+  border-radius: 11px;
+  background: rgba(246, 235, 216, 0.58);
+  font-size: 0.84rem;
+  font-weight: 800;
+  text-align: center;
+}
+
 .stage-row {
   display: flex;
   justify-content: space-between;
@@ -132,9 +149,19 @@ h1 {
 
 .progress-track {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(18px, 1fr));
   gap: 7px;
   margin-bottom: 30px;
+}
+
+.event-message {
+  margin: 12px 0 0;
+  padding: 9px 12px;
+  border-radius: 10px;
+  color: #3f5d46;
+  background: rgba(84, 115, 90, 0.1);
+  font-size: 0.82rem;
+  font-weight: 750;
 }
 
 .progress-track span {
@@ -327,6 +354,13 @@ h1 {
 .hint-button:hover {
   border-color: rgba(133, 96, 59, 0.42);
   background: #f3e5ce;
+}
+
+.hint-button:disabled {
+  color: #a89483;
+  background: rgba(225, 216, 205, 0.55);
+  cursor: not-allowed;
+  opacity: 0.72;
 }
 
 .primary-button {
