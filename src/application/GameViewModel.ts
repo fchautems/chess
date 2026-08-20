@@ -1,4 +1,5 @@
 import type { ChessSquare } from '../domain/chess/ChessRules'
+import type { SessionStrategy } from '../domain/session/SessionDirector'
 import type { PersistedTrainingPhase } from './progress/ProgressRepository'
 
 export type TrainingPhase = PersistedTrainingPhase
@@ -9,12 +10,12 @@ export interface BoardMoveView {
   san: string
 }
 
-export interface LessonResultView {
+export interface TrainingResultView {
   title: string
   message: string
-  concept: string
+  concepts: readonly string[]
   learnerMoveSequence: readonly string[]
-  hasNextLesson: boolean
+  primaryLabel: string
 }
 
 export interface GameViewModel {
@@ -24,27 +25,35 @@ export interface GameViewModel {
   isBoardInteractive: boolean
   stageIndex: number
   stageTitle: string
-  stageLessonsCompleted: number
-  stageLessonsTotal: number
-  lessonId: string
-  lessonTitle: string
-  lessonConcept: string
+  stageMovesCompleted: number
+  stageMovesTotal: number
   coachLabel: string
   prompt: string
   feedback: string | null
+  hint: string | null
+  canRequestHint: boolean
   moveHistory: readonly string[]
   lastMove: BoardMoveView | null
   learnerMovesCompleted: number
   learnerMovesTotal: number
-  completedLessons: number
-  totalLessons: number
-  result: LessonResultView | null
+  completedStages: number
+  totalStages: number
+  masteryScore: number
+  coverageCount: number
+  coverageTotal: number
+  dueCount: number
+  currentNodeMastery: number
+  runsCompleted: number
+  deepestRun: number
+  lastBranchStrategy: SessionStrategy | null
+  result: TrainingResultView | null
 }
 
 export type MoveResultKind =
   | 'accepted'
-  | 'lesson-discovered'
-  | 'lesson-complete'
+  | 'checkpoint-ready'
+  | 'stage-complete'
+  | 'run-complete'
   | 'illegal'
   | 'outside-training-line'
   | 'not-awaiting-move'

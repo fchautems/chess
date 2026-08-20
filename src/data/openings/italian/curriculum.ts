@@ -40,6 +40,10 @@ const fens = {
     'r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3',
   afterBc4:
     'r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3',
+  afterEarlyNf6:
+    'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4',
+  afterEarlyNf6D3:
+    'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R b KQkq - 0 4',
   afterBc5:
     'r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4',
   afterD3:
@@ -224,6 +228,12 @@ const nodes: readonly OpeningNode[] = [
         san: 'Bc5',
         targetNodeId: 'italian-after-bc5',
       },
+      {
+        from: 'g8',
+        to: 'f6',
+        san: 'Nf6',
+        targetNodeId: 'italian-after-nf6-early',
+      },
     ],
     theoreticalImportance: 0.95,
     prompt: 'Les Noirs développent leur fou sur la même diagonale active.',
@@ -232,6 +242,68 @@ const nodes: readonly OpeningNode[] = [
     hints: noHints,
     tags: ['development'],
     prerequisites: ['italian-after-nc6'],
+  },
+  {
+    id: 'italian-after-nf6-early',
+    fen: fens.afterEarlyNf6,
+    positionKey: normalizePositionKey(fens.afterEarlyNf6),
+    sideToMove: 'white',
+    curriculumStageId: ITALIAN_STAGE_1_ID,
+    type: 'learner-decision',
+    acceptedLearnerMoves: [
+      {
+        from: 'd2',
+        to: 'd3',
+        san: 'd3',
+        targetNodeId: 'italian-after-nf6-early-d3',
+      },
+    ],
+    preferredTrainingMove: {
+      from: 'd2',
+      to: 'd3',
+      san: 'd3',
+      targetNodeId: 'italian-after-nf6-early-d3',
+    },
+    opponentMoves: [],
+    theoreticalImportance: 0.85,
+    prompt:
+      'Le cavalier noir est sorti avant le fou : consolide e4 sans changer ton plan.',
+    recallPrompt: 'Le même plan calme fonctionne malgré cet ordre de coups.',
+    errorExplanation:
+      'Même après …Nf6 immédiat, d3 soutient e4 et garde une structure familière.',
+    hints: hints(
+      'Ton plan central reste valable.',
+      'Le pion e4 a toujours besoin d’un soutien sobre.',
+      'Le pion d peut avancer d’une case.',
+      'Déplace le pion de d2 vers d3.',
+    ),
+    tags: ['centre', 'development'],
+    prerequisites: ['italian-after-nc6'],
+  },
+  {
+    id: 'italian-after-nf6-early-d3',
+    fen: fens.afterEarlyNf6D3,
+    positionKey: normalizePositionKey(fens.afterEarlyNf6D3),
+    sideToMove: 'black',
+    curriculumStageId: ITALIAN_STAGE_1_ID,
+    type: 'opponent-branch',
+    acceptedLearnerMoves: [],
+    preferredTrainingMove: null,
+    opponentMoves: [
+      {
+        from: 'f8',
+        to: 'c5',
+        san: 'Bc5',
+        targetNodeId: 'italian-after-nf6',
+      },
+    ],
+    theoreticalImportance: 0.85,
+    prompt: 'Les Noirs développent leur fou et rejoignent la structure connue.',
+    recallPrompt: '',
+    errorExplanation: '',
+    hints: noHints,
+    tags: ['development'],
+    prerequisites: ['italian-after-nf6-early'],
   },
   {
     id: 'italian-after-bc5',
@@ -328,7 +400,7 @@ const nodes: readonly OpeningNode[] = [
       'Déplace le roi de e1 vers g1 pour roquer.',
     ),
     tags: ['king-safety'],
-    prerequisites: ['italian-after-bc5'],
+    prerequisites: ['italian-after-d3', 'italian-after-nf6-early-d3'],
   },
   {
     id: 'italian-after-castle',
@@ -432,6 +504,7 @@ export const italianStage1: LessonStage = {
   entryNodeId: 'italian-after-bc4',
   criticalNodeIds: [
     'italian-after-bc5',
+    'italian-after-nf6-early',
     'italian-after-nf6',
     'italian-after-d6',
   ],
@@ -453,8 +526,6 @@ const lessons: readonly CurriculumLesson[] = [
     concept: 'Occuper le centre et libérer le fou du roi.',
     targetNodeId: ITALIAN_START_NODE_ID,
     learnerMoveSequence: ['e4'],
-    reproductionPrompt:
-      'Repars de la position initiale et retrouve ce premier coup sans indication directe.',
     successMessage: 'Tu sais maintenant poser la première pierre de l’Italienne.',
   },
   {
@@ -465,8 +536,6 @@ const lessons: readonly CurriculumLesson[] = [
     concept: 'Sortir une pièce tout en attaquant e5.',
     targetNodeId: 'italian-after-e4-e5',
     learnerMoveSequence: ['e4', 'Nf3'],
-    reproductionPrompt:
-      'Rejoue maintenant les deux décisions depuis le début, sans réponse donnée.',
     successMessage: 'Le centre et le cavalier forment déjà une intention cohérente.',
   },
   {
@@ -477,8 +546,6 @@ const lessons: readonly CurriculumLesson[] = [
     concept: 'Développer le fou sur la diagonale sensible de f7.',
     targetNodeId: 'italian-after-nc6',
     learnerMoveSequence: ['e4', 'Nf3', 'Bc4'],
-    reproductionPrompt:
-      'Retrouve les trois fondations depuis la position initiale : aucune pièce ne sera jouée à ta place.',
     successMessage: 'Tu viens de reconstruire seul l’identité de la Partie italienne.',
   },
   {
@@ -489,8 +556,6 @@ const lessons: readonly CurriculumLesson[] = [
     concept: 'Soutenir e4 et préparer un développement harmonieux.',
     targetNodeId: 'italian-after-bc5',
     learnerMoveSequence: ['e4', 'Nf3', 'Bc4', 'd3'],
-    reproductionPrompt:
-      'Repars du début et reconstruis toute la ligne jusqu’au soutien du centre.',
     successMessage: 'Ton centre est maintenant stable sans bloquer tes pièces.',
   },
   {
@@ -501,8 +566,6 @@ const lessons: readonly CurriculumLesson[] = [
     concept: 'Roquer dès que le développement le permet.',
     targetNodeId: 'italian-after-nf6',
     learnerMoveSequence: ['e4', 'Nf3', 'Bc4', 'd3', 'O-O'],
-    reproductionPrompt:
-      'Reconstruis la position depuis le début, puis sécurise ton roi au bon moment.',
     successMessage: 'Ton roi est en sécurité et ta tour entre dans la partie.',
   },
   {
@@ -513,8 +576,6 @@ const lessons: readonly CurriculumLesson[] = [
     concept: 'Préparer d4 sans précipiter l’ouverture du centre.',
     targetNodeId: 'italian-after-d6',
     learnerMoveSequence: ['e4', 'Nf3', 'Bc4', 'd3', 'O-O', 'c3'],
-    reproductionPrompt:
-      'Une dernière fois depuis le départ : construis toute la structure calme jusqu’à c3.',
     successMessage: 'Tu maîtrises désormais la première structure calme de l’Italienne.',
   },
 ]

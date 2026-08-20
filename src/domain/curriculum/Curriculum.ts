@@ -6,7 +6,6 @@ export interface CurriculumLesson {
   concept: string
   targetNodeId: string
   learnerMoveSequence: readonly string[]
-  reproductionPrompt: string
   successMessage: string
 }
 

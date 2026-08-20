@@ -7,19 +7,19 @@ import {
 import type { ChessMoveInput } from '../domain/chess/ChessRules'
 import { ChessJsAdapter } from '../domain/chess/ChessJsAdapter'
 import type {
-  PlayerProgressV1,
+  PlayerProgressV2,
   ProgressRepository,
 } from './progress/ProgressRepository'
 import { GameController } from './GameController'
 
 class MemoryProgressRepository implements ProgressRepository {
-  private value: PlayerProgressV1 | null = null
+  private value: PlayerProgressV2 | null = null
 
-  load(): PlayerProgressV1 | null {
+  load(): PlayerProgressV2 | null {
     return this.value ? JSON.parse(JSON.stringify(this.value)) : null
   }
 
-  save(progress: PlayerProgressV1): void {
+  save(progress: PlayerProgressV2): void {
     this.value = JSON.parse(JSON.stringify(progress))
   }
 
@@ -31,56 +31,53 @@ class MemoryProgressRepository implements ProgressRepository {
     return this.value ? JSON.stringify(this.value) : null
   }
 
-  importData(serialized: string): PlayerProgressV1 {
+  importData(serialized: string): PlayerProgressV2 {
     this.value = JSON.parse(serialized)
-    return this.load() as PlayerProgressV1
+    return this.load() as PlayerProgressV2
   }
 }
 
-const learnerMoves: readonly ChessMoveInput[] = [
+const stage0Moves: readonly ChessMoveInput[] = [
   { from: 'e2', to: 'e4' },
   { from: 'g1', to: 'f3' },
   { from: 'f1', to: 'c4' },
+]
+
+const stage1Moves: readonly ChessMoveInput[] = [
   { from: 'd2', to: 'd3' },
   { from: 'e1', to: 'g1' },
   { from: 'c2', to: 'c3' },
 ]
 
-function createController(repository = new MemoryProgressRepository()) {
+function createController(
+  repository = new MemoryProgressRepository(),
+  now = () => 1_000,
+) {
   return new GameController(
     italianOpeningGraph,
     new ChessJsAdapter(),
     italianCurriculum,
     repository,
+    { now },
   )
 }
 
-function playLearnerMoves(controller: GameController, count: number) {
-  let result = controller.submitLearnerMove(learnerMoves[0])
-
-  for (let index = 1; index < count; index += 1) {
-    result = controller.submitLearnerMove(learnerMoves[index])
-  }
-
-  return result
+function playMoves(controller: GameController, moves: readonly ChessMoveInput[]) {
+  return moves.map((move) => controller.submitLearnerMove(move)).at(-1)
 }
 
-function completeActiveLesson(controller: GameController, moveCount: number) {
-  const discovery = playLearnerMoves(controller, moveCount)
-  expect(discovery.kind).toBe('lesson-discovered')
-  expect(discovery.view.phase).toBe('ready-to-reproduce')
-
-  const reproduction = controller.startReproduction()
-  expect(reproduction.phase).toBe('reproduction')
-  expect(reproduction.moveHistory).toEqual([])
-
-  const completion = playLearnerMoves(controller, moveCount)
-  expect(completion.kind).toBe('lesson-complete')
-  expect(completion.view.phase).toBe('lesson-complete')
-  return completion.view
+function completeOnboarding(controller: GameController) {
+  expect(playMoves(controller, stage0Moves)?.kind).toBe('checkpoint-ready')
+  controller.startCheckpoint()
+  expect(playMoves(controller, stage0Moves)?.kind).toBe('stage-complete')
+  controller.continueAfterStage()
+  expect(playMoves(controller, stage1Moves)?.kind).toBe('checkpoint-ready')
+  controller.startCheckpoint()
+  expect(playMoves(controller, stage1Moves)?.kind).toBe('stage-complete')
+  return controller.continueAfterStage()
 }
 
-describe('GameController teaching flow', () => {
+describe('GameController v0.3 flow', () => {
   let repository: MemoryProgressRepository
   let controller: GameController
 
@@ -89,121 +86,108 @@ describe('GameController teaching flow', () => {
     controller = createController(repository)
   })
 
-  it('starts with the explicit discovery of e4', () => {
-    const view = controller.getViewModel()
+  it('continues through the whole first block before one checkpoint', () => {
+    const initial = controller.getViewModel()
+    expect(initial.phase).toBe('discovering')
+    expect(initial.prompt).toContain('Continue tant que')
+    expect(initial.hint).toBeNull()
 
-    expect(view.lessonId).toBe('lesson-e4')
-    expect(view.phase).toBe('discovery')
-    expect(view.coachLabel).toBe('Nouveau concept')
-    expect(view.prompt).toContain('centre')
-    expect(view.completedLessons).toBe(0)
-    expect(view.totalLessons).toBe(6)
+    expect(controller.submitLearnerMove(stage0Moves[0]).kind).toBe('accepted')
+    expect(controller.submitLearnerMove(stage0Moves[1]).kind).toBe('accepted')
+
+    const end = controller.submitLearnerMove(stage0Moves[2])
+    expect(end.kind).toBe('checkpoint-ready')
+    expect(end.view.moveHistory).toEqual(['e4', 'e5', 'Nf3', 'Nc6', 'Bc4'])
+    expect(end.view.result?.primaryLabel).toBe('Valider ce bloc sans aide')
   })
 
-  it('requires discovery then a clean replay from the beginning', () => {
-    const discovery = controller.submitLearnerMove({ from: 'e2', to: 'e4' })
+  it('reproduces once per block and continues from the current position', () => {
+    playMoves(controller, stage0Moves)
+    const checkpoint = controller.startCheckpoint()
+    expect(checkpoint.nodeId).toBe('italian-start')
 
-    expect(discovery.kind).toBe('lesson-discovered')
-    expect(discovery.view.phase).toBe('ready-to-reproduce')
-    expect(discovery.view.lastMove).toMatchObject({ from: 'e2', to: 'e4' })
-    expect(controller.legalDestinations('g1')).toEqual([])
+    playMoves(controller, stage0Moves)
+    const continued = controller.continueAfterStage()
 
-    controller.startReproduction()
-    const completion = controller.submitLearnerMove({ from: 'e2', to: 'e4' })
+    expect(continued.phase).toBe('discovering')
+    expect(continued.stageIndex).toBe(1)
+    expect(continued.nodeId).toBe('italian-after-bc5')
+    expect(continued.moveHistory.at(-1)).toBe('Bc5')
+    expect(continued.learnerMovesCompleted).toBe(0)
 
-    expect(completion.kind).toBe('lesson-complete')
-    expect(completion.view.completedLessons).toBe(1)
-    expect(completion.view.result?.learnerMoveSequence).toEqual(['e4'])
+    playMoves(controller, stage1Moves)
+    const secondCheckpoint = controller.startCheckpoint()
+    expect(secondCheckpoint.nodeId).toBe('italian-after-bc5')
+    expect(secondCheckpoint.moveHistory).toEqual(['Bc5'])
   })
 
-  it('restarts every extended lesson from the initial position', () => {
-    completeActiveLesson(controller, 1)
-    const nextLesson = controller.continueToNextLesson()
+  it('shows hints only after an explicit request and discounts mastery credit', () => {
+    expect(controller.getViewModel().hint).toBeNull()
+    const hinted = controller.requestHint()
+    expect(hinted.hint).toContain('centre')
 
-    expect(nextLesson.lessonId).toBe('lesson-nf3')
-    expect(nextLesson.nodeId).toBe('italian-start')
+    controller.submitLearnerMove(stage0Moves[0])
+    const hintedScore = controller.getViewModel().masteryScore
 
-    const afterE4 = controller.submitLearnerMove({ from: 'e2', to: 'e4' })
-    expect(afterE4.kind).toBe('accepted')
-    expect(afterE4.view.moveHistory).toEqual(['e4', 'e5'])
-    expect(afterE4.view.coachLabel).toBe('Nouveau concept')
-
-    const discoveredNf3 = controller.submitLearnerMove({ from: 'g1', to: 'f3' })
-    expect(discoveredNf3.kind).toBe('lesson-discovered')
-    expect(discoveredNf3.view.learnerMovesCompleted).toBe(2)
-
-    const replay = controller.startReproduction()
-    expect(replay.nodeId).toBe('italian-start')
-    expect(replay.coachLabel).toBe('Sans aide')
+    const cleanController = createController()
+    cleanController.submitLearnerMove(stage0Moves[0])
+    expect(cleanController.getViewModel().masteryScore).toBeGreaterThan(hintedScore)
   })
 
-  it('rejects illegal and off-line moves without advancing the lesson', () => {
+  it('teaches only after an error, then lets the learner continue in place', () => {
     const initialFen = controller.getViewModel().fen
+    const wrong = controller.submitLearnerMove({ from: 'd2', to: 'd4' })
 
-    const illegal = controller.submitLearnerMove({ from: 'e2', to: 'e5' })
-    expect(illegal.kind).toBe('illegal')
-    expect(illegal.view.fen).toBe(initialFen)
+    expect(wrong.kind).toBe('outside-training-line')
+    expect(wrong.view.fen).toBe(initialFen)
+    expect(wrong.view.feedback).toContain('pion du roi')
 
-    const offLine = controller.submitLearnerMove({ from: 'd2', to: 'd4' })
-    expect(offLine.kind).toBe('outside-training-line')
-    expect(offLine.view.fen).toBe(initialFen)
-    expect(offLine.view.learnerMovesCompleted).toBe(0)
+    const recovered = controller.submitLearnerMove(stage0Moves[0])
+    expect(recovered.kind).toBe('accepted')
+    expect(recovered.view.nodeId).toBe('italian-after-e4-e5')
+    expect(recovered.view.currentNodeMastery).toBe(0)
   })
 
-  it('unlocks Stage 1 only after the three Stage 0 lessons', () => {
-    for (let moveCount = 1; moveCount <= 3; moveCount += 1) {
-      completeActiveLesson(controller, moveCount)
-      const next = controller.continueToNextLesson()
+  it('unlocks adaptive runs and targets the unpractised early Nf6 branch', () => {
+    const ready = completeOnboarding(controller)
+    expect(ready.phase).toBe('adaptive-ready')
+    expect(ready.completedStages).toBe(2)
 
-      if (moveCount < 3) {
-        expect(next.stageIndex).toBe(0)
-      } else {
-        expect(next.stageIndex).toBe(1)
-        expect(next.lessonId).toBe('lesson-d3')
-      }
-    }
+    controller.startAdaptiveRun()
+    playMoves(controller, stage0Moves)
+    const branch = controller.getViewModel()
+
+    expect(branch.nodeId).toBe('italian-after-nf6-early')
+    expect(branch.moveHistory.at(-1)).toBe('Nf6')
+    expect(branch.lastBranchStrategy).toBe('targeted')
+
+    expect(controller.submitLearnerMove(stage1Moves[0]).kind).toBe('accepted')
+    expect(controller.getViewModel().nodeId).toBe('italian-after-nf6')
+    controller.submitLearnerMove(stage1Moves[1])
+    const completed = controller.submitLearnerMove(stage1Moves[2])
+
+    expect(completed.kind).toBe('run-complete')
+    expect(completed.view.runsCompleted).toBe(1)
   })
 
-  it('teaches all six decisions through c3 and shows a final result', () => {
-    for (let moveCount = 1; moveCount <= 6; moveCount += 1) {
-      const completed = completeActiveLesson(controller, moveCount)
-      expect(completed.completedLessons).toBe(moveCount)
+  it('restores an in-progress continuous session after reload', () => {
+    controller.submitLearnerMove(stage0Moves[0])
 
-      const next = controller.continueToNextLesson()
-
-      if (moveCount < 6) {
-        expect(next.phase).toBe('discovery')
-      } else {
-        expect(next.phase).toBe('curriculum-complete')
-        expect(next.result?.title).toBe('Première structure maîtrisée')
-        expect(next.completedLessons).toBe(6)
-      }
-    }
+    const restored = createController(repository).getViewModel()
+    expect(restored.phase).toBe('discovering')
+    expect(restored.nodeId).toBe('italian-after-e4-e5')
+    expect(restored.moveHistory).toEqual(['e4', 'e5'])
+    expect(restored.learnerMovesCompleted).toBe(1)
   })
 
-  it('restores the pedagogical phase and completed lessons after reload', () => {
-    controller.submitLearnerMove({ from: 'e2', to: 'e4' })
-
-    const restoredReady = createController(repository)
-    expect(restoredReady.getViewModel().phase).toBe('ready-to-reproduce')
-
-    restoredReady.startReproduction()
-    restoredReady.submitLearnerMove({ from: 'e2', to: 'e4' })
-
-    const restoredResult = createController(repository).getViewModel()
-    expect(restoredResult.phase).toBe('lesson-complete')
-    expect(restoredResult.completedLessons).toBe(1)
-    expect(restoredResult.result?.title).toBe('Prendre le centre')
-  })
-
-  it('exposes legal destinations and can deliberately reset all progress', () => {
+  it('exposes legal destinations and deliberately resets all v0.3 progress', () => {
     expect(controller.legalDestinations('e2')).toEqual(['e3', 'e4'])
-    completeActiveLesson(controller, 1)
+    controller.submitLearnerMove(stage0Moves[0])
 
     const reset = controller.resetAllProgress()
-    expect(reset.lessonId).toBe('lesson-e4')
-    expect(reset.phase).toBe('discovery')
-    expect(reset.completedLessons).toBe(0)
+    expect(reset.phase).toBe('discovering')
+    expect(reset.nodeId).toBe('italian-start')
+    expect(reset.masteryScore).toBe(0)
     expect(repository.load()).toBeNull()
   })
 })

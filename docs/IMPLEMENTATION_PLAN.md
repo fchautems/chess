@@ -207,7 +207,9 @@ Teaching ideas:
 - develop a piece with purpose
 - develop the bishop actively
 
-Flow: demonstrate one decision, then restart from the initial position and require reproduction before adding the next.
+Flow revised after v0.2 playtesting: let the learner play the three decisions
+continuously, then require one unaided reproduction of the whole identity block.
+Do not restart after each individual move.
 
 ### Stage 1 — Quiet main structure
 
@@ -630,6 +632,10 @@ Goal: stop feeling scripted.
 
 Deliver:
 
+- continuous discovery while the learner is correct
+- one unaided checkpoint per meaningful curriculum block
+- next block continues from the position already reached
+- hints hidden until explicitly requested
 - per-node mastery
 - review tiers
 - first two opponent branches
@@ -637,7 +643,8 @@ Deliver:
 - seeded tests
 - coverage/depth/mastery stats
 
-Exit criterion: repeated runs vary while weak nodes demonstrably return more often.
+Exit criterion: learning no longer restarts after every concept, repeated runs
+vary, and weak/due nodes demonstrably return more often.
 
 ### v0.4 — Game loop
 

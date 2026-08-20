@@ -240,6 +240,27 @@ h1 {
   line-height: 1.45;
 }
 
+.hint-message {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(163, 121, 65, 0.18);
+  border-radius: 11px;
+  color: #674a2f;
+  background: #f5ead3;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.hint-message strong {
+  color: #9a6b34;
+  font-size: 0.68rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
 .move-history {
   display: flex;
   flex-direction: column;
@@ -258,6 +279,54 @@ h1 {
 .move-history strong {
   min-height: 24px;
   font-size: 0.95rem;
+}
+
+.mastery-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+  margin: 2px 0 16px;
+}
+
+.mastery-strip span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 7px;
+  border: 1px solid rgba(63, 93, 70, 0.11);
+  border-radius: 10px;
+  color: #907867;
+  background: rgba(84, 115, 90, 0.06);
+  font-size: 0.64rem;
+  font-weight: 750;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.mastery-strip strong {
+  color: #3f5d46;
+  font-size: 0.9rem;
+}
+
+.hint-button {
+  width: 100%;
+  margin-bottom: 9px;
+  padding: 11px 15px;
+  border: 1px solid rgba(133, 96, 59, 0.24);
+  border-radius: 11px;
+  color: #795638;
+  background: rgba(246, 235, 216, 0.7);
+  font-weight: 760;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease;
+}
+
+.hint-button:hover {
+  border-color: rgba(133, 96, 59, 0.42);
+  background: #f3e5ce;
 }
 
 .primary-button {

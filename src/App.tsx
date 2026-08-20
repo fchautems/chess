@@ -41,8 +41,9 @@ export default function App() {
 
       return (
         result.kind === 'accepted' ||
-        result.kind === 'lesson-discovered' ||
-        result.kind === 'lesson-complete'
+        result.kind === 'checkpoint-ready' ||
+        result.kind === 'stage-complete' ||
+        result.kind === 'run-complete'
       )
     },
     [applyView, controller],
@@ -96,16 +97,23 @@ export default function App() {
   )
 
   const handlePrimaryAction = useCallback(() => {
-    if (view.phase === 'ready-to-reproduce') {
-      applyView(controller.startReproduction())
-    } else if (view.phase === 'lesson-complete') {
-      applyView(controller.continueToNextLesson())
-    } else if (view.phase === 'curriculum-complete') {
-      applyView(controller.resetAllProgress())
+    if (view.phase === 'checkpoint-ready') {
+      applyView(controller.startCheckpoint())
+    } else if (view.phase === 'stage-complete') {
+      applyView(controller.continueAfterStage())
+    } else if (
+      view.phase === 'adaptive-ready' ||
+      view.phase === 'run-complete'
+    ) {
+      applyView(controller.startAdaptiveRun())
     } else {
-      applyView(controller.restartSequence())
+      applyView(controller.restartCurrentBlock())
     }
   }, [applyView, controller, view.phase])
+
+  const handleHint = useCallback(() => {
+    applyView(controller.requestHint())
+  }, [applyView, controller])
 
   const handleResetProgress = useCallback(() => {
     if (
@@ -118,24 +126,15 @@ export default function App() {
   }, [applyView, controller])
 
   const stageProgress = Array.from(
-    { length: view.stageLessonsTotal },
-    (_, index) => (index < view.stageLessonsCompleted ? 'done' : 'todo'),
+    { length: view.stageMovesTotal },
+    (_, index) => (index < view.stageMovesCompleted ? 'done' : 'todo'),
   )
 
-  const primaryLabel = (() => {
-    switch (view.phase) {
-      case 'ready-to-reproduce':
-        return 'Rejouer sans aide'
-      case 'lesson-complete':
-        return view.result?.hasNextLesson
-          ? 'Ajouter le prochain concept'
-          : 'Voir le bilan des deux étapes'
-      case 'curriculum-complete':
-        return 'Recommencer le parcours'
-      default:
-        return 'Recommencer la séquence'
-    }
-  })()
+  const primaryLabel =
+    view.result?.primaryLabel ??
+    (view.phase === 'adaptive-run'
+      ? 'Recommencer ce run'
+      : 'Recommencer ce bloc')
 
   return (
     <main className="app-shell">
@@ -146,9 +145,10 @@ export default function App() {
         </div>
         <div className="header-status">
           <span>
-            Parcours {view.completedLessons}/{view.totalLessons}
+            Maîtrise {view.masteryScore}% · couverture {view.coverageCount}/
+            {view.coverageTotal}
           </span>
-          <strong>Apprentissage · v0.2</strong>
+          <strong>Adaptatif · v0.3</strong>
         </div>
       </header>
 
@@ -167,11 +167,12 @@ export default function App() {
           <div className="stage-row">
             <span>Étape {view.stageIndex}</span>
             <span>
-              {view.stageLessonsCompleted}/{view.stageLessonsTotal}
+              {view.completedStages}/{view.totalStages} blocs · {view.runsCompleted}{' '}
+              runs
             </span>
           </div>
 
-          <h2>{view.result?.title ?? view.lessonTitle}</h2>
+          <h2>{view.result?.title ?? view.stageTitle}</h2>
 
           <div className="progress-track" aria-label="Progression de l’étape">
             {stageProgress.map((state, index) => (
@@ -184,8 +185,10 @@ export default function App() {
               <span className="coach-label">{view.coachLabel}</span>
               <p>{view.result.message}</p>
               <div className="concept-box">
-                <span>Idée retenue</span>
-                <strong>{view.result.concept}</strong>
+                <span>Idées travaillées</span>
+                {view.result.concepts.map((concept) => (
+                  <strong key={concept}>{concept}</strong>
+                ))}
               </div>
               <div className="sequence-chips" aria-label="Coups appris">
                 {view.result.learnerMoveSequence.map((move) => (
@@ -206,9 +209,16 @@ export default function App() {
                 </p>
               )}
 
+              {view.hint && (
+                <p className="hint-message" aria-live="polite">
+                  <strong>Indice demandé</strong>
+                  {view.hint}
+                </p>
+              )}
+
               <div className="move-history">
                 <span>
-                  Séquence {view.learnerMovesCompleted}/{view.learnerMovesTotal}
+                  Décisions {view.learnerMovesCompleted}/{view.learnerMovesTotal}
                 </span>
                 <strong>
                   {view.moveHistory.length > 0
@@ -217,6 +227,31 @@ export default function App() {
                 </strong>
               </div>
             </>
+          )}
+
+          <div className="mastery-strip" aria-label="Progression adaptative">
+            <span>
+              <strong>{view.masteryScore}%</strong>
+              Maîtrise
+            </span>
+            <span>
+              <strong>{view.coverageCount}/{view.coverageTotal}</strong>
+              Couverture
+            </span>
+            <span>
+              <strong>{view.dueCount}</strong>
+              À revoir
+            </span>
+            <span>
+              <strong>{view.deepestRun}/{view.learnerMovesTotal}</strong>
+              Profondeur
+            </span>
+          </div>
+
+          {!view.result && view.canRequestHint && (
+            <button className="hint-button" type="button" onClick={handleHint}>
+              Besoin d’un indice ?
+            </button>
           )}
 
           <button
@@ -228,7 +263,8 @@ export default function App() {
           </button>
 
           <p className="interaction-note">
-            Clique une pièce puis sa case d’arrivée, ou utilise le glisser-déposer.
+            Aucun indice n’est affiché automatiquement. Clique une pièce puis sa
+            destination, ou utilise le glisser-déposer.
           </p>
 
           <button

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import type { PlayerProgressV2 } from '../../application/progress/ProgressRepository'
 import { LocalStorageProgressRepository } from './LocalStorageProgressRepository'
 
 class MemoryStorage {
@@ -18,44 +19,68 @@ class MemoryStorage {
   }
 }
 
+const progress: PlayerProgressV2 = {
+  schemaVersion: 2,
+  phase: 'adaptive-run',
+  activeStageIndex: 1,
+  completedStageIds: ['italian-stage-0', 'italian-stage-1'],
+  masteryByNodeId: {},
+  randomSeed: 73_941,
+  directorDecisionIndex: 2,
+  runsCompleted: 1,
+  deepestRun: 6,
+  session: {
+    currentNodeId: 'italian-after-e4-e5',
+    fen: 'fen',
+    moveHistory: ['e4', 'e5'],
+    learnerMovesCompleted: 1,
+    currentHintsUsed: 0,
+    recoveredAfterError: false,
+  },
+}
+
 describe('LocalStorageProgressRepository', () => {
-  it('saves, loads, exports and resets schema v1 progress', () => {
+  it('saves, loads, exports and resets schema v2 progress', () => {
     const repository = new LocalStorageProgressRepository(new MemoryStorage())
-    const progress = {
-      schemaVersion: 1 as const,
-      activeLessonId: 'lesson-nf3',
-      phase: 'reproduction' as const,
-      completedLessonIds: ['lesson-e4'],
-    }
 
     repository.save(progress)
     expect(repository.load()).toEqual(progress)
-    expect(repository.exportData()).toContain('lesson-nf3')
+    expect(repository.exportData()).toContain('adaptive-run')
 
     repository.reset()
     expect(repository.load()).toBeNull()
   })
 
-  it('rejects corrupt or unsupported imported data', () => {
+  it('migrates completed v0.2 lessons without losing learned decisions', () => {
     const repository = new LocalStorageProgressRepository(new MemoryStorage())
-
-    expect(() => repository.importData('{"schemaVersion":2}')).toThrow(
-      'Version de sauvegarde non prise en charge',
-    )
-    expect(() => repository.importData('not-json')).toThrow()
-  })
-
-  it('deduplicates lesson ids when importing debug data', () => {
-    const repository = new LocalStorageProgressRepository(new MemoryStorage())
-    const imported = repository.importData(
+    const migrated = repository.importData(
       JSON.stringify({
         schemaVersion: 1,
-        activeLessonId: 'lesson-nf3',
-        phase: 'discovery',
-        completedLessonIds: ['lesson-e4', 'lesson-e4'],
+        activeLessonId: 'lesson-c3',
+        phase: 'curriculum-complete',
+        completedLessonIds: [
+          'lesson-e4',
+          'lesson-nf3',
+          'lesson-bc4',
+          'lesson-d3',
+          'lesson-castle',
+          'lesson-c3',
+        ],
       }),
     )
 
-    expect(imported.completedLessonIds).toEqual(['lesson-e4'])
+    expect(migrated.schemaVersion).toBe(2)
+    expect(migrated.phase).toBe('adaptive-ready')
+    expect(migrated.completedStageIds).toHaveLength(2)
+    expect(migrated.masteryByNodeId['italian-start'].score).toBe(60)
+  })
+
+  it('rejects corrupt or unsupported imported data', () => {
+    const repository = new LocalStorageProgressRepository(new MemoryStorage())
+
+    expect(() => repository.importData('{"schemaVersion":3}')).toThrow(
+      'Version de sauvegarde non prise en charge',
+    )
+    expect(() => repository.importData('not-json')).toThrow()
   })
 })

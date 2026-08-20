@@ -95,13 +95,16 @@ The first experience assumes the player knows nothing about the opening.
 
 ### 4.1 Discovery phase
 
-The coach introduces the opening in very small steps.
+The coach first lets the learner continue with a neutral prompt for as long as
+they recognize the positions. A correct move immediately continues the line;
+the app does not interrupt after every decision. Teaching appears only when the
+learner makes a mistake or explicitly requests a hint.
 
 Example:
 
-1. Explain briefly that the Italian Game begins by taking space in the centre and developing quickly.
-2. Ask the learner to move the king pawn two squares.
-3. Highlight the origin/destination if needed, but never execute the learner's move automatically.
+1. Invite the learner to play what they already know.
+2. If they block on the first move, explain briefly that the Italian Game begins by taking space in the centre.
+3. Highlight the origin/destination only after an explicit hint request, and never execute the learner's move automatically.
 4. Opponent replies `...e5`.
 5. Ask the learner to develop the knight toward a square that attacks `e5`.
 6. Opponent replies `...Nc6`.
@@ -112,7 +115,10 @@ The exact French copy should be short, friendly and interactive rather than text
 
 ### 4.2 Reproduction phase
 
-Once a short chunk has been demonstrated, reset to the initial position and ask the learner to replay the same chunk without visible help.
+Once a meaningful short chunk has been traversed, ask the learner to replay
+that chunk once without visible help. The first chunk starts from the initial
+position; later chunks may start from their entry position so the learner does
+not repeatedly recite already stable material.
 
 If they succeed, that chunk becomes provisionally learned.
 
@@ -120,17 +126,21 @@ If they hesitate, they may purchase/request a hint rather than having the app au
 
 ### 4.3 Incremental extension
 
-After the learner reproduces the known sequence, introduce only one new decision/concept at a time.
+After the learner reproduces a chunk, continue directly from the position
+reached and introduce the next small group of decisions. Concepts remain small,
+but the board is not reset after every individual concept.
 
 Example structure:
 
-- Step 1: `e4`
-- Step 2: `e4 e5 Nf3`
-- Step 3: `e4 e5 Nf3 Nc6 Bc4`
-- Step 4: replay from the start, then introduce the next response/idea
-- Step 5: replay from the start, extend again
+- Block 1 discovery: `e4 e5 Nf3 Nc6 Bc4`, continuously
+- Block 1 checkpoint: replay that identity chunk once from the start
+- Block 2 discovery: continue from `Bc4` with `...Bc5 d3 ...Nf6 O-O ...d6 c3`
+- Block 2 checkpoint: replay only the quiet-structure chunk from its entry
+- Adaptive runs: replay the known trunk while opponent branches vary
 
-This “always restart from the beginning” loop is intentional. It reinforces the whole sequence while extending it gradually.
+Continuous play is the default. Full replay from the beginning remains useful
+for adaptive runs and occasional consolidation, not as a mandatory interruption
+after every new move.
 
 ### 4.4 From trunk to branches
 
@@ -950,7 +960,7 @@ If these are true for one opening, the system can then scale to more openings.
 - focus the first validation on the Italian Game;
 - model learning as progressive traversal of a branching opening structure;
 - teach actively: learner always plays their own move;
-- introduce moves/concepts gradually and replay from the start;
+- introduce moves/concepts gradually, continue while correct and consolidate by meaningful chunks;
 - vary opponent branches rather than repeat one fixed line;
 - weight branch selection toward weak mastery while retaining surprise;
 - track mastery per position/decision;
