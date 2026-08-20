@@ -249,6 +249,18 @@ For the first polished desktop playable:
 
 Do not add further Italian theory until this content produces a fun loop.
 
+After v0.3 playtesting, apply an additional floor before calling the game loop
+meaningful rather than merely functional:
+
+- at least 10–15 learner decisions available across a normal session
+- at least 3 pedagogically distinct Black continuations across 2 or more branch points
+- at least one real transposition or move-order convergence
+- enough unlocked material for an ordinary run to vary without immediately repeating the same six White decisions
+- every added line legally validated and given a clear teaching purpose before UI/gamification work depends on it
+
+This is not permission to add broad opening theory. It is the minimum content
+runway needed for lives, streaks, gold and records to create real choices.
+
 ## 7. Definition of “level”
 
 Do not equate level directly with depth.
@@ -585,7 +597,8 @@ Requirements:
 Test full flows without the visual board:
 
 - brand-new player learns e4 → Nf3 → Bc4
-- successful reproduction unlocks next concept
+- continuous discovery reaches the end of a block before one checkpoint
+- successful block checkpoint continues from the position reached
 - weak branch reappears later
 - hint purchase changes gold and mastery credit
 - save/reload restores progression
@@ -597,6 +610,8 @@ Add browser tests for drag/click moves, sounds toggles, refresh persistence and 
 ## 20. Milestone roadmap
 
 ### v0.1 — Clean foundation
+
+Status: **completed**
 
 Goal: architecture proves itself.
 
@@ -614,6 +629,8 @@ Exit criterion: player can legally play the first Italian sequence and the core 
 
 ### v0.2 — Teaching vertical slice
 
+Status: **completed; its restart-after-every-decision flow was superseded by v0.3 playtesting**
+
 Goal: prove active learning.
 
 Deliver:
@@ -627,6 +644,8 @@ Deliver:
 Exit criterion: a player who does not know the Italian can learn and reproduce the initial trunk without external explanation.
 
 ### v0.3 — Adaptive trainer
+
+Status: **completed**
 
 Goal: stop feeling scripted.
 
@@ -648,23 +667,45 @@ vary, and weak/due nodes demonstrably return more often.
 
 ### v0.4 — Game loop
 
-Goal: make ten minutes enjoyable.
+Goal: make a 5–10 minute run varied, understandable and worth replaying.
 
-Deliver:
+Build it in three internal slices; do not publish a thin economy on top of the
+current seven learner-decision positions.
+
+#### v0.4a — Content runway
+
+- extend the Italian curriculum to the content floor defined in section 6
+- author 3 pedagogically distinct Black continuations across at least 2 branch points
+- preserve transpositions and per-position mastery
+- validate every FEN, move and prerequisite in deterministic tests
+- tune Session Director guardrails against immediate branch repetition
+
+#### v0.4b — Run tension
 
 - 3 lives
-- recovery flow
-- gold
-- 5-gold random-quality hints
-- anti-frustration curve
+- one-life maximum loss per failed encounter, followed by recovery teaching
 - streak/combo
-- run results and records
+- run end at zero lives with immediate replay
+- run results: depth, clean streak, branches seen, weak nodes improved and records
+- concise surprise/weakness/milestone event copy
 
-Exit criterion: the player makes real resource choices and immediately wants to retry after a failed run.
+#### v0.4c — Economy and hints
+
+- starting gold balance
+- gold earning that rewards learning rather than trivial farming
+- 5-gold random-quality hints
+- first hint may already be excellent
+- repeated purchases improve the quality distribution and never repeat text
+- hint quality reduces mastery credit
+- economy simulation tests across many deterministic runs
+
+Exit criterion: runs vary materially, lives create tension without blocking
+learning, gold creates a real hint decision, and the player immediately wants to
+retry after a failed or record-setting run.
 
 ### v0.5 — Polish
 
-Goal: stop looking like a prototype.
+Goal: turn the proven v0.4 loop into a small finished game.
 
 Deliver:
 
@@ -675,6 +716,8 @@ Deliver:
 - improved coach copy
 - simple visual branch/stage progression
 - basic cosmetic unlock mechanism
+- first milestone/boss run using the unlocked Italian branches
+- candidate boss baseline for playtesting: 12 positions, 3 lives, at most one hint and an 85% success target
 
 Exit criterion: the application feels like a small finished game rather than a training demo.
 
@@ -707,13 +750,29 @@ Exit criterion: same progression data model and learning engines run unchanged o
 
 ### Later
 
-- boss runs
+- richer boss tiers
 - richer opening map
 - additional Italian content
 - Black-side repertoire
 - second opening
 - more skins/sound packs
 - Capacitor/native packaging if useful
+
+### Operational model guidance — 2026-08-20
+
+This is workflow guidance, not a product dependency, and should be revisited as
+available models change.
+
+- roadmap/specification revisions: **GPT-5.6 Sol, high**
+- v0.4a chess content, graph and transposition tests: **Sol, high**
+- v0.4b run state machine and recovery: **Sol, high**
+- v0.4c economy, probabilistic hints and simulation tests: **Sol, high**
+- v0.5 UI/audio/animation integration: **Sol, high**; use dedicated image generation only for bitmap assets
+- v0.6 Stockfish worker/WASM integration: **Sol, xhigh** for the initial architecture and difficult debugging, then high for normal follow-up
+- v0.7 responsive/mobile work: **Sol, high**
+
+Do not default to max. Escalate beyond high only for a demonstrated hard
+integration/debugging problem, not merely because a milestone is larger.
 
 ## 21. Build order inside each version
 

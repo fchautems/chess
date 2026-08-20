@@ -791,7 +791,7 @@ The first reboot milestone should deliberately stay narrow.
 3. Legal move validation.
 4. Opening tree/data model.
 5. Beginner discovery lesson from zero.
-6. Replay-from-start incremental learning.
+6. Continuous learning while correct, with one unaided checkpoint per meaningful block.
 7. Multiple opponent branches.
 8. Per-position mastery.
 9. Adaptive branch selection with controlled randomness.
@@ -802,6 +802,12 @@ The first reboot milestone should deliberately stay narrow.
 14. Automatic local persistence.
 15. Basic sound feedback.
 16. One polished board + one polished piece set.
+
+Before the full lives/gold/streak loop is considered representative, the
+Italian curriculum should provide enough runway for meaningful variation:
+roughly 20–35 nodes, 10–15 learner decisions, at least 3 pedagogically distinct
+Black continuations across 2 or more branch points, and at least one tested
+transposition. This remains one opening, not broad repertoire expansion.
 
 ### Strong candidates soon after
 
