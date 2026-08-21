@@ -71,10 +71,17 @@ export default function App() {
       const result = controller.submitLearnerMove({ from, to })
       applyView(result.view)
 
-      if (result.kind === 'consequence' || result.kind === 'illegal') {
+      if (result.kind === 'illegal') {
         audio.play('mistake')
+      } else if (result.kind === 'consequence') {
+        audio.play('move')
+        window.setTimeout(() => audio.play('mistake'), 70)
       } else if (result.kind !== 'not-awaiting-move') {
-        audio.play(result.view.streak >= 3 ? 'combo' : 'correct')
+        audio.play('move')
+        window.setTimeout(
+          () => audio.play(result.view.streak >= 3 ? 'combo' : 'correct'),
+          85,
+        )
       }
 
       return (

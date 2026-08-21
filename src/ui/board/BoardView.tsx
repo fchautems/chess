@@ -1,4 +1,9 @@
-import { Chessboard, type ChessboardOptions } from 'react-chessboard'
+import {
+  Chessboard,
+  defaultPieces,
+  type ChessboardOptions,
+  type PieceRenderObject,
+} from 'react-chessboard'
 
 import type { BoardMoveView } from '../../application/GameViewModel'
 import type { ChessSquare } from '../../domain/chess/ChessRules'
@@ -15,6 +20,28 @@ interface BoardViewProps {
 }
 
 const squarePattern = /^[a-h][1-8]$/
+
+const createPolishedPieces = (shadow: string): PieceRenderObject =>
+  Object.fromEntries(
+    Object.entries(defaultPieces).map(([piece, render]) => [
+      piece,
+      (props?: Parameters<typeof render>[0]) =>
+        render({
+          ...props,
+          svgStyle: {
+            ...props?.svgStyle,
+            filter: shadow,
+          },
+        }),
+    ]),
+  )
+
+const walnutPieces = createPolishedPieces(
+  'drop-shadow(0 4px 3px rgba(37, 20, 11, 0.38))',
+)
+const midnightPieces = createPolishedPieces(
+  'drop-shadow(0 3px 4px rgba(6, 15, 14, 0.55))',
+)
 
 function isChessSquare(value: string | null): value is ChessSquare {
   return value !== null && squarePattern.test(value)
@@ -61,6 +88,7 @@ export function BoardView({
   const options: ChessboardOptions = {
     id: 'italian-training-board',
     position: fen,
+    pieces: theme === 'midnight' ? midnightPieces : walnutPieces,
     allowDragging: !disabled,
     animationDurationInMs: 180,
     showAnimations: true,
