@@ -12,6 +12,7 @@ export interface RunState {
   hintsPurchased: number
   goldEarned: number
   goldSpent: number
+  mode?: 'normal' | 'boss'
 }
 
 export interface RunSuccessContext {
@@ -27,7 +28,7 @@ export interface RunSuccessResult {
   milestone: number | null
 }
 
-export function createRunState(): RunState {
+export function createRunState(mode: 'normal' | 'boss' = 'normal'): RunState {
   return {
     status: 'active',
     lives: STARTING_LIVES,
@@ -38,6 +39,7 @@ export function createRunState(): RunState {
     hintsPurchased: 0,
     goldEarned: 0,
     goldSpent: 0,
+    mode,
   }
 }
 

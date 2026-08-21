@@ -741,6 +741,19 @@ Deliver:
 
 Exit criterion: the application feels like a small finished game rather than a training demo.
 
+Implemented in v0.5:
+
+- premium atelier art direction with a generated background asset
+- procedural, locally synthesized sound palette with mute persistence
+- restrained reward, error and consequence animations
+- visible stage/branch journey map
+- first master challenge with three lives and at most one hint
+- unlockable Midnight board cosmetic after a master victory
+- authored pedagogical consequences: a legal mistake remains visible, Black's
+  verified response is played, then the position rewinds for recovery
+- honest fallback for legal off-repertoire moves: explanation without a fake
+  tactical punishment; Stockfish generalization remains a v0.6 responsibility
+
 ### v0.6 — Stockfish consultant
 
 Goal: intelligent handling of off-repertoire legal moves.

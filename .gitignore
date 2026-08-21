@@ -2,3 +2,4 @@ node_modules
 *.local
 *.log
 __pycache__
+src/assets/chess-atelier-bg.png

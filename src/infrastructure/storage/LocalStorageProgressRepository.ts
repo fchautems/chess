@@ -103,6 +103,8 @@ function parseProgress(serialized: string): PlayerProgressV3 {
     !Number.isInteger(candidate.goldBalance) ||
     !Number.isInteger(candidate.bestStreak) ||
     !Number.isInteger(candidate.hintDrawIndex) ||
+    (candidate.bossVictories !== undefined &&
+      !Number.isInteger(candidate.bossVictories)) ||
     !isRunSummary(candidate.lastRun) ||
     !isSession(candidate.session)
   ) {
@@ -124,6 +126,9 @@ function parseProgress(serialized: string): PlayerProgressV3 {
     hintDrawIndex: candidate.hintDrawIndex as number,
     lastRun: candidate.lastRun ? { ...candidate.lastRun } : null,
     session: candidate.session ? { ...candidate.session } : null,
+    ...(candidate.bossVictories === undefined
+      ? {}
+      : { bossVictories: candidate.bossVictories }),
   }
 }
 
@@ -182,6 +187,7 @@ function migrateLegacyProgress(value: LegacyProgressV1): PlayerProgressV3 {
     hintDrawIndex: 0,
     lastRun: null,
     session: null,
+    bossVictories: 0,
   }
 }
 
@@ -226,6 +232,7 @@ function migrateV2Progress(value: LegacyProgressV2): PlayerProgressV3 {
           branchLabels: [],
         }
       : null,
+    bossVictories: 0,
   }
 }
 

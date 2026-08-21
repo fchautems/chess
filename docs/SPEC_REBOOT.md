@@ -477,6 +477,24 @@ Branches may appear as:
 
 Do not reveal the entire theoretical tree at the beginning. Discovery itself should feel rewarding.
 
+### 11.3 Visible consequences after mistakes
+
+A legal wrong move should normally remain visible long enough to be understood.
+When the authored curriculum contains a verified tactical or strategic reply,
+Black plays that reply on the board and the coach explains the concrete
+consequence. The position is then rewound and the learner retries without a
+second life loss on the same encounter.
+
+The application must distinguish three cases:
+
+- illegal move: reject immediately;
+- authored genuine mistake: show Black's verified consequence;
+- legal move outside the repertoire: explain that it leaves the training plan,
+  without inventing a fake punishment.
+
+Stockfish may generalize this classification in v0.6, but authored training
+must remain fully functional without it.
+
 ---
 
 ## 12. Graphics and art direction

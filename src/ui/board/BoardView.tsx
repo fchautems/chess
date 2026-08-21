@@ -11,6 +11,7 @@ interface BoardViewProps {
   lastMove: BoardMoveView | null
   onMove: (from: ChessSquare, to: ChessSquare) => boolean
   onSquareSelect: (square: ChessSquare) => void
+  theme?: 'walnut' | 'midnight'
 }
 
 const squarePattern = /^[a-h][1-8]$/
@@ -27,6 +28,7 @@ export function BoardView({
   lastMove,
   onMove,
   onSquareSelect,
+  theme = 'walnut',
 }: BoardViewProps) {
   const squareStyles: NonNullable<ChessboardOptions['squareStyles']> = {}
 
@@ -68,8 +70,12 @@ export function BoardView({
       boxShadow: '0 24px 70px rgba(14, 10, 6, 0.28)',
       overflow: 'hidden',
     },
-    lightSquareStyle: { backgroundColor: '#e9d7b4' },
-    darkSquareStyle: { backgroundColor: '#8f654c' },
+    lightSquareStyle: {
+      backgroundColor: theme === 'midnight' ? '#b8c2bd' : '#e7d1aa',
+    },
+    darkSquareStyle: {
+      backgroundColor: theme === 'midnight' ? '#314b46' : '#875b3f',
+    },
     onSquareClick: ({ square }) => {
       if (!disabled && isChessSquare(square)) {
         onSquareSelect(square)

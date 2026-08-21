@@ -33,6 +33,7 @@ const progress: PlayerProgressV3 = {
   bestStreak: 5,
   hintDrawIndex: 2,
   lastRun: null,
+  bossVictories: 1,
   session: {
     currentNodeId: 'italian-after-e4-e5',
     fen: 'fen',

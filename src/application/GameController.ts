@@ -17,6 +17,7 @@ import {
 import type { OpeningGraph } from '../domain/opening/OpeningGraph'
 import { toUci } from '../domain/opening/OpeningMove'
 import { drawHint, HINT_COST } from '../domain/hints/HintEngine'
+import { findMistakeConsequence } from '../domain/mistakes/MistakeConsequences'
 import type { HintQuality, OpeningNode } from '../domain/opening/OpeningNode'
 import {
   completeRun,
@@ -50,6 +51,17 @@ interface GameControllerOptions {
   seed?: number
 }
 
+interface PendingConsequence {
+  originalFen: string
+  originalMoveHistory: readonly string[]
+  originalLastMove: BoardMoveView | null
+  learnerMove: AppliedChessMove
+  opponentReply: (ChessMoveInput & { san: string }) | null
+  title: string
+  explanation: string
+  replyRevealed: boolean
+}
+
 export class GameController {
   private currentNodeId: string
   private phase: PersistedTrainingPhase
@@ -78,6 +90,8 @@ export class GameController {
   private readonly improvedNodeIds = new Set<string>()
   private branchLabels: string[] = []
   private lastBranchStrategy: SessionStrategy | null = null
+  private pendingConsequence: PendingConsequence | null = null
+  private bossVictories = 0
   private readonly now: () => number
   private readonly director: SessionDirector
 
@@ -110,6 +124,7 @@ export class GameController {
     this.bestStreak = restored.bestStreak
     this.hintDrawIndex = restored.hintDrawIndex
     this.lastRun = restored.lastRun ? { ...restored.lastRun } : null
+    this.bossVictories = restored.bossVictories ?? 0
     this.currentNodeId = curriculum.startNodeId
 
     if (!this.restoreSession(restored)) {
@@ -120,7 +135,7 @@ export class GameController {
   submitLearnerMove(move: ChessMoveInput): MoveResult {
     const node = this.currentNode()
 
-    if (!this.isInteractive() || node.type !== 'learner-decision') {
+    if (!this.isInteractive() || this.pendingConsequence || node.type !== 'learner-decision') {
       return this.result('not-awaiting-move')
     }
 
@@ -143,15 +158,24 @@ export class GameController {
     )
 
     if (!acceptedMove) {
-      this.rules.load(previousFen)
-      this.feedback = node.errorExplanation
-      if (this.recordFailureOnce(node.id) && this.runHasEnded()) {
-        this.finishRun('out-of-lives')
-        this.saveProgress()
-        return this.result('run-over')
+      const authored = findMistakeConsequence(node.id, appliedMove.uci)
+      this.recordFailureOnce(node.id)
+      this.pendingConsequence = {
+        originalFen: previousFen,
+        originalMoveHistory: [...this.moveHistory],
+        originalLastMove: this.lastMove ? { ...this.lastMove } : null,
+        learnerMove: appliedMove,
+        opponentReply: authored?.opponentReply ?? null,
+        title: authored?.title ?? 'Ce coup quitte notre plan',
+        explanation: authored?.explanation ??
+          `${node.errorExplanation} Le coup reste peut-être jouable, mais il n’est pas puni artificiellement : nous revenons à la position pour travailler l’idée prévue.`,
+        replyRevealed: !authored?.opponentReply,
       }
-      this.saveProgress()
-      return this.result('outside-training-line')
+      this.recordMove(appliedMove)
+      this.feedback = authored
+        ? 'Observe maintenant comment les Noirs exploitent cette imprécision.'
+        : 'Coup légal, mais hors du répertoire travaillé.'
+      return this.result('consequence')
     }
 
     const answeredNodeId = node.id
@@ -229,6 +253,40 @@ export class GameController {
     return this.result('accepted')
   }
 
+  revealConsequence(): GameViewModel {
+    const pending = this.pendingConsequence
+    if (!pending || pending.replyRevealed) return this.getViewModel()
+
+    if (pending.opponentReply) {
+      const reply = this.rules.move(pending.opponentReply)
+      if (!reply) {
+        throw new Error(`Authored consequence ${pending.opponentReply.san} is illegal`)
+      }
+      this.recordMove(reply)
+    }
+    pending.replyRevealed = true
+    return this.getViewModel()
+  }
+
+  retryAfterConsequence(): GameViewModel {
+    const pending = this.pendingConsequence
+    if (!pending || !pending.replyRevealed) return this.getViewModel()
+
+    this.pendingConsequence = null
+    if (this.runHasEnded()) {
+      this.finishRun('out-of-lives')
+      this.saveProgress()
+      return this.getViewModel()
+    }
+
+    this.rules.load(pending.originalFen)
+    this.moveHistory = [...pending.originalMoveHistory]
+    this.lastMove = pending.originalLastMove ? { ...pending.originalLastMove } : null
+    this.feedback = 'À toi de corriger : la vie est déjà comptée, cette position ne peut pas t’en coûter une seconde.'
+    this.saveProgress()
+    return this.getViewModel()
+  }
+
   legalDestinations(from: ChessSquare): readonly ChessSquare[] {
     const node = this.currentNode()
 
@@ -240,6 +298,11 @@ export class GameController {
     const node = this.currentNode()
 
     if (!this.isInteractive() || node.type !== 'learner-decision') {
+      return this.getViewModel()
+    }
+
+    if (this.runState?.mode === 'boss' && this.runState.hintsPurchased >= 1) {
+      this.feedback = 'Le défi maître autorise un seul indice.'
       return this.getViewModel()
     }
 
@@ -330,11 +393,31 @@ export class GameController {
     return this.getViewModel()
   }
 
+  startBossRun(): GameViewModel {
+    if (
+      !this.bossAvailable() ||
+      (this.phase !== 'adaptive-ready' &&
+        this.phase !== 'run-complete' &&
+        this.phase !== 'run-over')
+    ) {
+      return this.getViewModel()
+    }
+
+    this.phase = 'adaptive-run'
+    this.runState = createRunState('boss')
+    this.improvedNodeIds.clear()
+    this.branchLabels = []
+    this.eventMessage = 'Défi maître · trois vies, un seul indice, toute la ligne.'
+    this.resetBoardTo(this.curriculum.startNodeId)
+    this.saveProgress()
+    return this.getViewModel()
+  }
+
   restartCurrentBlock(): GameViewModel {
     if (!this.isInteractive()) return this.getViewModel()
 
     if (this.phase === 'adaptive-run') {
-      this.runState = createRunState()
+      this.runState = createRunState(this.runState?.mode ?? 'normal')
       this.improvedNodeIds.clear()
       this.branchLabels = []
       this.eventMessage = 'Run relancé · trois vies restaurées.'
@@ -361,6 +444,8 @@ export class GameController {
     this.bestStreak = 0
     this.hintDrawIndex = 0
     this.lastRun = null
+    this.bossVictories = 0
+    this.pendingConsequence = null
     this.runState = null
     this.improvedNodeIds.clear()
     this.branchLabels = []
@@ -395,7 +480,7 @@ export class GameController {
       fen: this.rules.fen(),
       nodeId: this.currentNodeId,
       phase: this.phase,
-      isBoardInteractive: this.isInteractive(),
+      isBoardInteractive: this.isInteractive() && !this.pendingConsequence,
       stageIndex: stage.index,
       stageTitle: stage.title,
       stageMovesCompleted:
@@ -415,7 +500,8 @@ export class GameController {
         this.isInteractive() &&
         this.currentNode().type === 'learner-decision' &&
         this.goldBalance >= HINT_COST &&
-        this.availableHintCount(this.currentNode()) > 0,
+        this.availableHintCount(this.currentNode()) > 0 &&
+        !(this.runState?.mode === 'boss' && this.runState.hintsPurchased >= 1),
       hintUnavailableReason: this.hintUnavailableReason(),
       moveHistory: [...this.moveHistory],
       lastMove: this.lastMove ? { ...this.lastMove } : null,
@@ -442,6 +528,10 @@ export class GameController {
       eventMessage: this.eventMessage,
       lastBranchStrategy: this.lastBranchStrategy,
       lastRun: this.lastRun ? { ...this.lastRun } : null,
+      consequence: this.consequenceView(),
+      bossAvailable: this.bossAvailable() && this.phase !== 'adaptive-run',
+      bossActive: this.runState?.mode === 'boss' && this.phase === 'adaptive-run',
+      bossVictories: this.bossVictories,
       result: this.resultView(),
     }
   }
@@ -512,6 +602,7 @@ export class GameController {
     this.learnerMovesCompleted = 0
     this.currentHintsUsed = 0
     this.recoveredAfterError = false
+    this.pendingConsequence = null
     this.rules.load(this.currentNode().fen)
     this.assertPositionMatchesNode(this.currentNode())
   }
@@ -632,9 +723,16 @@ export class GameController {
     if (this.phase === 'run-complete' || this.phase === 'run-over') {
       const summary = this.lastRun
       const succeeded = this.phase === 'run-complete'
+      const bossVictory = summary?.bossVictory === true
       return {
-        title: succeeded ? 'Structure profonde atteinte' : 'Run terminé',
-        message: succeeded
+        title: bossVictory
+          ? 'Défi maître remporté'
+          : succeeded
+            ? 'Structure profonde atteinte'
+            : 'Run terminé',
+        message: bossVictory
+          ? 'Tu as tenu toute la ligne avec les contraintes du défi. Le thème Minuit est maintenant disponible.'
+          : succeeded
           ? 'Tu as traversé la structure complète malgré les variations de l’ordre noir.'
           : `Tu as atteint ${summary?.deepestPoint ?? 0} décisions. Les positions fragiles reviendront dans les prochains runs.`,
         concepts: [
@@ -758,6 +856,7 @@ export class GameController {
       bestStreak: this.bestStreak,
       hintDrawIndex: this.hintDrawIndex,
       lastRun: this.lastRun ? { ...this.lastRun } : null,
+      bossVictories: this.bossVictories,
       session: this.isInteractive()
         ? {
             currentNodeId: this.currentNodeId,
@@ -795,6 +894,7 @@ export class GameController {
       hintDrawIndex: 0,
       lastRun: null,
       session: null,
+      bossVictories: 0,
     }
 
     if (!progress) return defaultProgress
@@ -835,6 +935,8 @@ export class GameController {
 
   private finishRun(outcome: RunSummary['outcome']): void {
     const run = this.requireRunState()
+    const boss = run.mode === 'boss'
+    const bossVictory = boss && outcome === 'completed' && run.mistakes <= 1 && run.hintsPurchased <= 1
     this.lastRun = {
       outcome,
       decisions: run.decisions,
@@ -846,14 +948,39 @@ export class GameController {
       bestStreak: run.bestStreak,
       improvedNodeIds: [...this.improvedNodeIds],
       branchLabels: [...this.branchLabels],
+      boss,
+      bossVictory,
+    }
+    if (bossVictory) {
+      this.bossVictories += 1
+      this.goldBalance += 15
     }
     this.bestStreak = Math.max(this.bestStreak, run.bestStreak)
     this.runsCompleted += 1
     this.phase = outcome === 'completed' ? 'run-complete' : 'run-over'
-    this.eventMessage =
+    this.eventMessage = bossVictory
+      ? 'Défi maître réussi · +15 pièces et thème Minuit débloqué.'
+      :
       outcome === 'completed'
         ? 'Run réussi · nouvelle profondeur consolidée.'
         : 'Dernière vie perdue · les faiblesses sont enregistrées.'
+  }
+
+  private bossAvailable(): boolean {
+    return this.deepestRun >= this.maximumRunDecisions() || this.bossVictories > 0
+  }
+
+  private consequenceView(): GameViewModel['consequence'] {
+    const pending = this.pendingConsequence
+    if (!pending) return null
+    return {
+      title: pending.title,
+      explanation: pending.explanation,
+      learnerMove: pending.learnerMove.san,
+      opponentReply: pending.replyRevealed ? pending.opponentReply?.san ?? null : null,
+      replyPending: !pending.replyRevealed,
+      actionLabel: this.runHasEnded() ? 'Voir le bilan du run' : 'Revenir et corriger',
+    }
   }
 
   private successEventMessage(
@@ -878,6 +1005,9 @@ export class GameController {
     const node = this.currentNode()
     if (!this.isInteractive() || node.type !== 'learner-decision') return null
     if (this.goldBalance < HINT_COST) return `Il faut ${HINT_COST} pièces.`
+    if (this.runState?.mode === 'boss' && this.runState.hintsPurchased >= 1) {
+      return 'Le défi maître autorise un seul indice.'
+    }
     if (this.availableHintCount(node) === 0) return 'Tous les indices sont révélés.'
     return null
   }

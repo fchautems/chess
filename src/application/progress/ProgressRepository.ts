@@ -37,6 +37,8 @@ export interface RunSummary {
   bestStreak: number
   improvedNodeIds: readonly string[]
   branchLabels: readonly string[]
+  boss?: boolean
+  bossVictory?: boolean
 }
 
 export interface PlayerProgressV3 {
@@ -54,6 +56,7 @@ export interface PlayerProgressV3 {
   hintDrawIndex: number
   lastRun: RunSummary | null
   session: PersistedSession | null
+  bossVictories?: number
 }
 
 export interface ProgressRepository {

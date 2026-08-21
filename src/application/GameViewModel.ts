@@ -22,6 +22,15 @@ export interface TrainingResultView {
   primaryLabel: string
 }
 
+export interface MistakeConsequenceView {
+  title: string
+  explanation: string
+  learnerMove: string
+  opponentReply: string | null
+  replyPending: boolean
+  actionLabel: string
+}
+
 export interface GameViewModel {
   fen: string
   nodeId: string
@@ -61,6 +70,10 @@ export interface GameViewModel {
   eventMessage: string | null
   lastBranchStrategy: SessionStrategy | null
   lastRun: RunSummary | null
+  consequence: MistakeConsequenceView | null
+  bossAvailable: boolean
+  bossActive: boolean
+  bossVictories: number
   result: TrainingResultView | null
 }
 
@@ -72,6 +85,7 @@ export type MoveResultKind =
   | 'run-over'
   | 'illegal'
   | 'outside-training-line'
+  | 'consequence'
   | 'not-awaiting-move'
 
 export interface MoveResult {

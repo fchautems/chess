@@ -85,7 +85,7 @@ function completeOnboarding(controller: GameController) {
   return controller.continueAfterStage()
 }
 
-describe('GameController v0.4 flow', () => {
+describe('GameController v0.5 flow', () => {
   let repository: MemoryProgressRepository
   let controller: GameController
 
@@ -142,13 +142,17 @@ describe('GameController v0.4 flow', () => {
     expect(cleanController.getViewModel().masteryScore).toBeGreaterThan(hintedScore)
   })
 
-  it('teaches only after an error, then lets the learner continue in place', () => {
+  it('keeps a legal off-repertoire move visible without inventing a punishment', () => {
     const initialFen = controller.getViewModel().fen
     const wrong = controller.submitLearnerMove({ from: 'd2', to: 'd4' })
 
-    expect(wrong.kind).toBe('outside-training-line')
-    expect(wrong.view.fen).toBe(initialFen)
-    expect(wrong.view.feedback).toContain('pion du roi')
+    expect(wrong.kind).toBe('consequence')
+    expect(wrong.view.fen).not.toBe(initialFen)
+    expect(wrong.view.consequence?.opponentReply).toBeNull()
+    expect(wrong.view.consequence?.explanation).toContain('pas puni artificiellement')
+
+    const retry = controller.retryAfterConsequence()
+    expect(retry.fen).toBe(initialFen)
 
     const recovered = controller.submitLearnerMove(stage0Moves[0])
     expect(recovered.kind).toBe('accepted')
@@ -181,25 +185,70 @@ describe('GameController v0.4 flow', () => {
     expect(completed?.view.lastRun?.outcome).toBe('completed')
     expect(completed?.view.lastRun?.branchLabels).toHaveLength(2)
     expect(completed?.view.coverageTotal).toBe(13)
+    expect(completed?.view.bossAvailable).toBe(true)
+
+    const boss = controller.startBossRun()
+    expect(boss.bossActive).toBe(true)
+    const firstHint = controller.requestHint()
+    const balanceAfterOneHint = firstHint.goldBalance
+    const secondHint = controller.requestHint()
+    expect(secondHint.goldBalance).toBe(balanceAfterOneHint)
+    expect(secondHint.feedback).toContain('un seul indice')
+
+    const bossComplete = playMoves(controller, [
+      ...stage0Moves,
+      ...stage1Moves,
+      ...deepRunMoves,
+    ])
+    expect(bossComplete?.kind).toBe('run-complete')
+    expect(bossComplete?.view.lastRun?.bossVictory).toBe(true)
+    expect(bossComplete?.view.bossVictories).toBe(1)
   })
 
-  it('charges one life per failed encounter and ends immediately at zero', () => {
+  it('charges one life per failed encounter and shows the last consequence before the result', () => {
     completeOnboarding(controller)
     controller.startAdaptiveRun()
 
     const firstError = controller.submitLearnerMove({ from: 'd2', to: 'd4' })
     expect(firstError.view.lives).toBe(2)
     expect(controller.submitLearnerMove({ from: 'd2', to: 'd4' }).view.lives).toBe(2)
+    controller.retryAfterConsequence()
     controller.submitLearnerMove(stage0Moves[0])
 
-    expect(controller.submitLearnerMove({ from: 'd2', to: 'd4' }).view.lives).toBe(1)
+    const secondError = controller.submitLearnerMove({ from: 'd2', to: 'd4' })
+    expect(secondError.view.lives).toBe(1)
+    controller.retryAfterConsequence()
     controller.submitLearnerMove(stage0Moves[1])
 
     const finalError = controller.submitLearnerMove({ from: 'd2', to: 'd4' })
-    expect(finalError.kind).toBe('run-over')
+    expect(finalError.kind).toBe('consequence')
     expect(finalError.view.lives).toBe(0)
-    expect(finalError.view.lastRun?.mistakes).toBe(3)
-    expect(finalError.view.result?.primaryLabel).toContain('trois vies')
+    expect(finalError.view.consequence?.actionLabel).toContain('bilan')
+
+    const result = controller.retryAfterConsequence()
+    expect(result.lastRun?.mistakes).toBe(3)
+    expect(result.result?.primaryLabel).toContain('trois vies')
+  })
+
+  it('plays an authored black refutation on the board before rewinding', () => {
+    completeOnboarding(controller)
+    controller.startAdaptiveRun()
+    playMoves(controller, stage0Moves)
+    controller.submitLearnerMove(stage1Moves[0])
+
+    const before = controller.getViewModel().fen
+    const mistake = controller.submitLearnerMove({ from: 'f3', to: 'g5' })
+    expect(mistake.kind).toBe('consequence')
+    expect(mistake.view.consequence?.title).toBe('Le centre riposte')
+    expect(mistake.view.consequence?.replyPending).toBe(true)
+
+    const punished = controller.revealConsequence()
+    expect(punished.consequence?.opponentReply).toBe('d5')
+    expect(punished.moveHistory.at(-1)).toBe('d5')
+
+    const retry = controller.retryAfterConsequence()
+    expect(retry.fen).toBe(before)
+    expect(retry.lives).toBe(2)
   })
 
   it('spends five gold per deterministic non-repeating hint', () => {

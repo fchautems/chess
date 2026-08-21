@@ -1,7 +1,7 @@
 # Chess Openings Trainer
 
 Entraîneur progressif d’ouvertures d’échecs. La version actuelle est la
-**v0.4 — Runs & économie**. Elle enseigne d’abord les six fondations de la
+**v0.5 — Expérience & son**. Elle enseigne d’abord les six fondations de la
 structure italienne calme, puis propose des runs de onze décisions qui vont
 jusqu’à `Re1`, `Bb3` et la manœuvre `Nbd2–f1–g3`.
 
@@ -18,6 +18,18 @@ position, puis le joueur peut récupérer sans être puni plusieurs fois au mêm
 endroit. Les décisions propres construisent un combo et rapportent de l’or ;
 les indices coûtent 5 pièces, ont une qualité variable et deviennent en moyenne
 plus précis quand on en rachète sur la même position.
+
+La v0.5 donne maintenant une conséquence visible aux erreurs : un coup légal
+reste sur l’échiquier, puis les Noirs jouent une réfutation lorsqu’elle a été
+explicitement écrite et vérifiée. Un coup simplement hors répertoire est
+signalé sans inventer une fausse punition. Le joueur revient ensuite corriger
+la position sans pouvoir y perdre plusieurs vies.
+
+L’interface possède une direction visuelle « atelier » en vert forêt, noyer et
+or patiné, une carte de progression, des animations sobres et une identité
+sonore générée localement avec Web Audio. Le son est désactivable. Après avoir
+atteint toute la profondeur, un défi maître autorisant au plus un indice peut
+être lancé ; sa réussite débloque le thème d’échiquier Minuit.
 
 La maîtrise et la prochaine révision sont enregistrées par position. La
 progression, l’or, les records et la session en cours sont conservés
