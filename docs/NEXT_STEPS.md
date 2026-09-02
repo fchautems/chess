@@ -75,7 +75,39 @@ First collect several concrete candidates that can be previewed and compare:
 
 The current procedural sounds and default pieces remain the fallback until a clearly better open option is selected.
 
-### 4. Build a small repertoire-builder POC outside the gameplay loop
+### 4. Prototype FSRS for per-position memory scheduling
+
+Replace neither the curriculum nor the Session Director. Build a small isolated comparison between the current fixed review tiers and FSRS, using one FSRS item per learner-decision position.
+
+Responsibilities remain separate:
+
+- **FSRS** estimates when a learned position should be reviewed to maintain the target retention;
+- **Mastery Engine** records performance and learning state;
+- **Session Director** chooses which due/weak/new position to place in the current session and preserves pacing, curriculum and controlled surprise;
+- **curriculum gates** may reintroduce a prerequisite before its FSRS due date when teaching a deeper branch requires it.
+
+Candidate mapping from a training attempt to an FSRS grade:
+
+- wrong move or failed recall → `Again`;
+- correct only after a strong hint, several failed attempts or heavy hesitation → `Hard`;
+- correct unaided at normal pace → `Good`;
+- immediate confident recall of a genuinely difficult position → `Easy`.
+
+Do not infer the final mapping from correctness alone. Record enough raw evidence to retune it later: correctness, first-attempt success, hint strength/count, response time, retries and whether the position was new or a review.
+
+POC requirements:
+
+- use the maintained TypeScript implementation `ts-fsrs` behind a small adapter owned by the Mastery Engine;
+- persist FSRS card state and review history per position with a versioned schema;
+- make the target retention configurable, with a conservative initial experiment around 0.90;
+- inject the current clock so scheduling tests remain deterministic;
+- compare due dates and session composition against the existing fixed tiers;
+- provide a reset/migration path because tuning and schema changes are expected during the experiment;
+- do not let FSRS directly unlock content, select opponent branches, award mastery, gold or lives.
+
+Success criteria: fewer unnecessary repetitions of stable positions, earlier return of fragile positions, no prerequisite starvation, and sessions that remain varied and understandable.
+
+### 5. Build a small repertoire-builder POC outside the gameplay loop
 
 Keep this isolated from React and from the live trainer initially.
 
@@ -98,7 +130,7 @@ POC outputs:
 
 Start only with White `1.e4` leading toward the Italian family. Do not expand to a general repertoire generator until the numbers and generated tree make practical sense.
 
-### 5. Validate the allocation algorithm before integrating it
+### 6. Validate the allocation algorithm before integrating it
 
 The first algorithm can be deliberately simple and deterministic.
 
@@ -117,7 +149,7 @@ Questions to test:
 
 Stockfish should propose/validate choices, not automatically define pedagogy.
 
-### 6. Integrate only after the POC is convincing
+### 7. Integrate only after the POC is convincing
 
 If the POC is useful, extend static opening metadata with measured fields such as:
 
@@ -129,7 +161,7 @@ If the POC is useful, extend static opening metadata with measured fields such a
 
 Then let the existing Session Director use measured practical frequency as one input alongside mastery, overdue review, previous failures, curriculum target and controlled surprise.
 
-### 7. Keep the two Stockfish roles separate
+### 8. Keep the two Stockfish roles separate
 
 There are potentially two uses of Stockfish:
 
@@ -145,13 +177,14 @@ They should share evaluation concepts where useful but should not be coupled arc
 - replacing authored pedagogy with Stockfish output;
 - supporting many openings before the Italian POC is validated;
 - adding accounts/backend/cloud sync;
-- replacing the current mastery/review engine with a more complex spaced-repetition algorithm before real playtesting shows a need.
+- letting FSRS replace the curriculum, mastery scoring or Session Director;
+- committing to FSRS globally before the isolated comparison and playtest demonstrate a clear benefit.
 
 ## Decision checkpoint
 
-After the v0.5 playtest and the small frequency-aware repertoire POC, decide whether the next implementation milestone should be:
+After the v0.5 playtest, the isolated FSRS comparison and the small frequency-aware repertoire POC, decide whether the next implementation milestone should be:
 
-- **v0.6A:** click-only input + selected asset improvements + repertoire-frequency metadata/authoring tooling; then
+- **v0.6A:** click-only input + selected asset improvements + FSRS scheduling adapter/experiment + repertoire-frequency metadata/authoring tooling; then
 - **v0.6B:** runtime Stockfish consultant;
 
 or whether to keep the original single v0.6 Stockfish milestone and treat repertoire construction as separate offline tooling.
